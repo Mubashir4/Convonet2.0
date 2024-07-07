@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const diagnosticRouter = require('./diagnostic');
+const diagnosticGeminiRouter = require('./diagnosticGemini'); // Updated import
 const contextDocRouter = require('./contextDocRouter');
 const { transcribeAudio, upload } = require('./OpenAITranscribe');
 const { transcribeAudioOffline } = require('./OfflineTranscribe');
@@ -161,8 +161,8 @@ router.post('/transcribe', upload.single('audio'), (req, res) => {
 // Route to handle file upload and text extraction
 router.use('/contextDocs', contextDocRouter);
 
-// Use the diagnostic router
-router.use('/diagnose', diagnosticRouter);
+// Use the diagnosticGemini router
+router.use('/diagnose', diagnosticGeminiRouter); // Updated router usage
 
 // Signup route
 router.post('/signup', async (req, res) => {
