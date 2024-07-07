@@ -1,0 +1,184 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* Prevent scrolling */
+}
+
+.admin-panel-container {
+  padding: 20px;
+  background-color: white;
+  color: black;
+  min-height: 100vh;
+  overflow: auto;
+}
+
+.admin-panel-heading {
+  font-size: 2em;
+  text-align: center;
+  margin-top: 20px;
+  color: white;
+}
+
+.admin-panel-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.admin-panel-row input,
+.admin-panel-row button {
+  background-color: #1a1a1a;
+  color: white;
+  border: 1px solid #555;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 5px;
+}
+
+.admin-panel-row button:hover {
+  background-color: #333;
+}
+
+.admin-panel-table {
+  width: 90%;
+  margin: 20px auto;
+  background-color: white;
+  color: black;
+  border-collapse: collapse;
+}
+
+.admin-panel-table th,
+.admin-panel-table td {
+  border: 1px solid #ddd;
+  padding: 4px 8px; /* Reduced padding for compactness */
+}
+
+.admin-panel-table th {
+  background-color: #f2f2f2;
+  text-align: left;
+  font-size: 14px; /* Reduced font size */
+}
+
+.admin-panel-table td {
+  font-size: 13px; /* Reduced font size */
+}
+
+.context-document-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.context-document-preview {
+  width: 80%;
+  height: 100px;
+  background-color: grey;
+  color: black;
+  margin-top: 10px;
+  padding: 10px;
+  overflow: auto;
+}
+
+.context-document-info {
+  display: flex;
+  justify-content: space-between;
+  width: 80%;
+  margin-top: 10px;
+}
+
+.context-document-info span {
+  color: white;
+}
+
+.context-document-delete-btn {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.context-document-delete-btn:hover {
+  background-color: darkred;
+}
+
+/* Styles for custom prompts section */
+.custom-prompts-container {
+  margin-bottom: 20px;
+}
+
+.custom-prompts-container button {
+  margin-bottom: 10px;
+}
+
+.custom-prompt-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.custom-prompt-row input {
+  flex: 1;
+  padding: 4px 8px;
+}
+
+.custom-prompt-row button {
+  padding: 4px 8px;
+}
+
+.config-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.config-column {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.config-save-row {
+  display: block;
+  flex-direction: row;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* AdminPanel.css */
+
+.settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.settings-container .MuiBox-root {
+  width: 100%;
+}
+
+.settings-container .MuiFormControlLabel-root {
+  justify-content: space-between;
+}
+
+.loading-circle {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #000;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+

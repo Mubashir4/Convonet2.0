@@ -1,0 +1,89 @@
+.diagnosis-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  width: 100%;
+  height: 100vh; /* Full viewport height */
+  box-sizing: border-box;
+  background-color: #001a24db; /* Dark background color */
+  overflow: auto; /* Prevent scrolling on the main container */
+}
+
+.diagnosis-title {
+  font-weight: bold;
+  color: white;
+  margin-bottom: 20px;
+  align-self: flex-start; /* Left-align title */
+}
+
+.transcription-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.user-icon {
+  margin-right: 10px;
+  color: white;
+}
+
+.diagnosis-textfield {
+  flex-grow: 1;
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  overflow-y: auto; /* Make the field scrollable */
+  max-width: 100%; /* Ensure the field does not exceed the container width */
+  word-wrap: break-word; /* Ensure long words break to fit within the container */
+}
+
+.diagnosis-button {
+  margin-left: 10px;
+}
+
+.diagnosis-textarea-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.ai-diagnosis-textfield {
+  flex-grow: 1;
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  overflow-y: auto; /* Make the field scrollable */
+  position: relative;
+  height: calc(100vh - 200px); /* Adjust based on your layout */
+  max-width: 100%; /* Ensure the field does not exceed the container width */
+  word-wrap: break-word; /* Ensure long words break to fit within the container */
+}
+
+.clipboard-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  color: grey;
+}
+
+.ql-container.ql-bubble {
+  border: none;
+  padding: 0;
+}
+
+.ql-editor {
+  padding: 0;
+}
+
+.menu-item {
+  white-space: pre-wrap; /* Ensure long words break to fit within the container */
+  overflow-wrap: break-word;
+}

@@ -1,0 +1,45 @@
+.signup-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align to the top of the container */
+  padding-top: 100px; /* Ensure there's space for the top bar */
+  height: 100vh;
+  background-image: url('../../assets/dashBackground.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.signup-box {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  text-align: center;
+}
+
+.signup-title {
+  margin-bottom: 20px;
+}
+
+.signup-form .signup-input {
+  margin-bottom: 20px;
+}
+
+.signup-button {
+  margin-top: 10px;
+}
+
+.login-link {
+  display: block;
+  margin-top: 20px;
+  font-weight: bold; /* Make the text bold */
+  color: #2a00b3; /* Light blue color */
+  text-decoration: none; /* Remove underline */
+  cursor: pointer; /* Pointer cursor on hover */
+}
+
+.login-link:hover {
+  color: rgb(112, 10, 10); /* Slightly darker blue on hover */
+}

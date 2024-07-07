@@ -1,0 +1,26 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* Prevent scrolling */
+}
+
+.dashboard-container {
+  background-color: #171717;
+  height: 100vh; /* Ensure it covers the full viewport height */
+  width: 100%;   /* Ensure it covers the full viewport width */
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease-in-out;
+  overflow: auto;
+}
+
+.dashboard-container.collapsed {
+  margin-left: 0px;
+  width: calc(100%-10); /* Adjust width to account for sidebar */
+}
+
+.dashboard-container.expanded {
+  margin-left: 0;
+  width: 100%;
+}

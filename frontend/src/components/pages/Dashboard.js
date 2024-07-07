@@ -1,0 +1,102 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Typography, Box, IconButton } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import Sidebar from './Sidebar';
+import ContextDocument from './ContextDocument';
+import Transcribe from './Transcribe';
+import Diagnosis from './Diagnosis';
+import AdminPanel from './AdminPanel';
+import TranscriptionHistory from './TranscriptionHistoryPage';
+import { decryptData } from '../utils/encryption';
+import '../styles/Dashboard.css';
+
+const Dashboard = () => {
+  const [doctorName, setDoctorName] = useState('');
+  const [userRole, setUserRole] = useState('');
+  const [selectedOption, setSelectedOption] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const encryptedUser = sessionStorage.getItem('user');
+    const user = encryptedUser ? decryptData(encryptedUser) : null;
+    if (!user) {
+      navigate('/');
+    } else {
+      setDoctorName(user.name);
+      setUserRole(user.role);
+      if (user.role === 'admin') {
+        setSelectedOption('Admin Panel');
+      } else {
+        setSelectedOption('My Notes');
+      }
+    }
+  }, [navigate]);
+  
+
+  const handleLogout = () => {
+    sessionStorage.clear();
+    navigate('/');
+  };
+
+  const handleOptionSelect = (option) => {
+    setSelectedOption(option);
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const renderContent = () => {
+    switch (selectedOption) {
+      case 'Admin Panel':
+        return <AdminPanel />;
+      case 'My Notes':
+        return <ContextDocument />;
+      case 'Transcribe':
+        return <Transcribe />;
+      case 'Make Notes':
+        return <Diagnosis />;
+        case 'History':
+          return <TranscriptionHistory />;
+      default:
+        return <Typography variant="h5">Select an option from the sidebar.</Typography>;
+    }
+  };
+
+  return (
+    <Box className="dashboard-container" sx={{ display: 'flex', height: '100vh', flexDirection: 'column' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', padding: '5px' }}>
+        {!isSidebarOpen && (
+          <IconButton
+            onClick={toggleSidebar}
+            sx={{
+              color: 'grey',
+              backgroundColor: '#1a1919',
+              borderRadius: '4px',
+              marginRight: '10px',
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+      </Box>
+      <Box sx={{ display: 'flex', flexGrow: 1, backgroundColor: '#171717' }}>
+        <Sidebar
+          doctorName={doctorName}
+          onOptionSelect={handleOptionSelect}
+          isOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
+          isAdmin={userRole === 'admin'}
+          onLogout={handleLogout}
+        />
+        <Box sx={{ flexGrow: 1, padding: '20px', transition: 'margin-left 0.3s ease-in-out', marginLeft: isSidebarOpen ? '150px' : '0', backgroundColor: '#171717' }}>
+          {renderContent()}
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
+export default Dashboard;

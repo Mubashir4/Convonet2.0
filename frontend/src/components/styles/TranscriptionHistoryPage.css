@@ -1,0 +1,119 @@
+.history-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  width: 100%;
+  height: 100vh;
+  box-sizing: border-box;
+  background-color: #001a24db;
+  overflow: auto;
+}
+
+.history-title {
+  font-weight: bold;
+  color: white;
+  margin-bottom: 20px;
+  align-self: flex-start;
+}
+
+.history-list {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  background-color: #001a24db;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.timestamp {
+  color: white;
+  margin-bottom: 5px;
+}
+
+.transcription-box {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 5px;
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  position: relative;
+}
+
+.response-box {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 5px;
+  background-color: black;
+  color: white;
+  position: relative;
+}
+
+.transcription-box .MuiTypography-root,
+.response-box .MuiTypography-root {
+  flex-grow: 1;
+  word-wrap: break-word;
+}
+
+.copy-icon {
+  color: white;
+  border: 1px solid white;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* For transcription */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collapsed-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 6; /* For description */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.show-more {
+  color: blue;
+  cursor: pointer;
+  margin-top: 5px; /* Ensure it appears at the bottom of the text area */
+}
+
+.show-more:hover {
+  text-decoration: underline;
+}
+
+/* Add this CSS for the green message box */
+.copied-message {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  display: none;
+}
+
+.copied-message.show {
+  display: block;
+}

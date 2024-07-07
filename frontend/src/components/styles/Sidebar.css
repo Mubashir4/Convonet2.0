@@ -1,0 +1,66 @@
+.sidebar-container {
+  position: absolute;
+  transition: all 0.3s ease-in-out;
+  background-color: #171717;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #171717 !important; /* Ensure color is enforced */
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar.closed {
+  transform: translateX(-250px);
+}
+
+.menu-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: grey;
+}
+
+.sidebar-content {
+  margin-top: 10px;
+  text-align: center; /* Center the content */
+}
+
+/* Add this to your Sidebar.css */
+.make-notes {
+  background-color: #e40a1c; /* Light red background */
+  color: #dcd3d4; /* Dark red text */
+}
+
+.make-notes:hover {
+  background-color: #f5c6cb; /* Slightly darker red on hover */
+}
+
+.selected-red {
+  color: rgb(228, 213, 213) !important;
+  font-weight: bold;
+}
+
+.MuiListItem-root {
+  margin-bottom: 10px;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+}
+
+.MuiListItem-root:hover,
+.MuiListItem-root.selected {
+  background-color: #575c6b;
+  cursor: pointer;
+}
+
+
+.drawer-toggle-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  color: grey;
+  background-color: #1a1919; /* Ensure matching color for toggle button */
+  border-radius: 4px;
+}
