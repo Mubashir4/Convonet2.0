@@ -1,6 +1,7 @@
-<<<<<<< HEAD
 # Convonet2.0
+
 =======
+
 # mediscribe
 
 #Building Frontend:
@@ -128,7 +129,7 @@ mongod --version
 1. **Clone Your Repository**:
 
    ```sh
-   git clone git@github.com:Mubashir4/Convonet.git
+   git clone git@github.com:Mubashir4/Convonet2.0.git
 
    ```
 
@@ -347,8 +348,3 @@ Now, when users visit `https://54.189.189.201`, they should be able to access yo
 # For help
 
 [nodejs-ssl-server](https://github.com/saasscaleup/nodejs-ssl-server)
-
-[###Nvidia G4DN](https://gist.github.com/denguir/b21aa66ae7fb1089655dd9de8351a202?permalink_comment_id=4667754)
-
-[FastWhisper](https://github.com/Vaibhavs10/insanely-fast-whisper)
->>>>>>> cba2be83d (Upgrade Transcribe and Diagnosis to use faster-whisper and LLAMA-3)

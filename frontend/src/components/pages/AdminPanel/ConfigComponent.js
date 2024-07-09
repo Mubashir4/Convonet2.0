@@ -9,7 +9,6 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
   const [nValue, setNValue] = useState('');
   const [temperature, setTemperature] = useState('');
   const [audioModel, setAudioModel] = useState('0');
-  const [ec2Status, setEc2Status] = useState(null);
   const [ec2Ip, setEc2Ip] = useState('');
   const [loading, setLoading] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -22,6 +21,7 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
       setNValue(config.n);
       setTemperature(config.temperature);
       setAudioModel(config.audio_model);
+      setEc2Ip(config.ec2_ip); // Load EC2 IP
     } catch (error) {
       console.error('Error loading configuration:', error);
       setSnackbarMessage('Error loading configuration');
@@ -30,27 +30,13 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
     }
   };
 
-  const checkEc2Status = async () => {
-    try {
-      const response = await axios.get(`${CONFIG.SERVER_IP}/api/checkEc2Status`);
-      setEc2Status(response.data.status);
-      setEc2Ip(response.data.ip);
-    } catch (error) {
-      console.error('Error checking EC2 status:', error);
-      setSnackbarMessage('Error checking EC2 status');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    }
-  };
-
   useEffect(() => {
     loadConfig();
-    checkEc2Status();
   }, []);
 
   const saveConfig = async () => {
     try {
-      await axios.post(`${CONFIG.SERVER_IP}/api/saveConfig`, { n: nValue, temperature, audio_model: audioModel });
+      await axios.post(`${CONFIG.SERVER_IP}/api/saveConfig`, { n: nValue, temperature, audio_model: audioModel, ec2_ip: ec2Ip }); // Save EC2 IP
       setSnackbarMessage('Configuration saved successfully');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -73,27 +59,8 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
     setAudioModel(e.target.value);
   };
 
-  const handleEc2Action = (action) => {
-    setConfirmAction(action);
-    setConfirmDialogOpen(true);
-  };
-
-  const executeEc2Action = async () => {
-    setLoading(true);
-    setConfirmDialogOpen(false);
-    try {
-      const response = await axios.post(`${CONFIG.SERVER_IP}/api/${confirmAction}Ec2`);
-      setEc2Status(response.data.status);
-      setEc2Ip(response.data.ip);
-      setSnackbarMessage(`EC2 ${confirmAction === 'start' ? 'started' : 'stopped'} successfully`);
-      setSnackbarSeverity('success');
-    } catch (error) {
-      setSnackbarMessage(`Failed to ${confirmAction} EC2`);
-      setSnackbarSeverity('error');
-    } finally {
-      setLoading(false);
-      setSnackbarOpen(true);
-    }
+  const handleEc2IpChange = (e) => {
+    setEc2Ip(e.target.value); // Handle EC2 IP change
   };
 
   return (
@@ -129,6 +96,18 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
                 <InfoIcon sx={{ color: 'blue' }} />
               </Tooltip>
             </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <TextField
+                label="EC2 IP"
+                value={ec2Ip}
+                onChange={handleEc2IpChange}
+                InputLabelProps={{ shrink: true }}
+                sx={{ marginRight: '10px', backgroundColor: 'white' }}
+              />
+              <Tooltip title="The IP address of the EC2 instance.">
+                <InfoIcon sx={{ color: 'blue' }} />
+              </Tooltip>
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -138,25 +117,6 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
           <FormControlLabel value="0" control={<Radio sx={{ color: 'red', '&.Mui-checked': { color: 'red' } }} />} label="OpenAI Whisper" />
           <FormControlLabel value="1" control={<Radio />} label="Offline Whisper" />
         </RadioGroup>
-      </Box>
-      <Box className="config-column">
-        <Typography variant="h6" sx={{ color: 'black' }}>EC2 Instance</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Button
-            variant="contained"
-            color={ec2Status === 'running' ? 'error' : 'success'}
-            onClick={() => handleEc2Action(ec2Status === 'running' ? 'stop' : 'start')}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} /> : ec2Status === 'running' ? 'Stop' : 'Start'}
-          </Button>
-          <TextField
-            label="EC2 IP"
-            value={ec2Ip}
-            InputProps={{ readOnly: true }}
-            sx={{ backgroundColor: 'white' }}
-          />
-        </Box>
       </Box>
       <Box className="config-save-row">
         <Button
@@ -168,26 +128,6 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
           Save Configuration
         </Button>
       </Box>
-
-      <Dialog
-        open={confirmDialogOpen}
-        onClose={() => setConfirmDialogOpen(false)}
-      >
-        <DialogTitle>Confirm {confirmAction === 'start' ? 'Start' : 'Stop'} EC2</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to {confirmAction} the EC2 instance?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={executeEc2Action} color="primary" autoFocus>
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

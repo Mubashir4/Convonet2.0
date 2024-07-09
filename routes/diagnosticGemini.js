@@ -10,6 +10,9 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+  throw new Error('GEMINI_API_KEY is not defined in environment variables');
+}
 const googleAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const readConfig = () => {
@@ -44,6 +47,7 @@ const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000) 
       generatedOutput += response.text();
       return generatedOutput;
     } catch (error) {
+      console.error(`Error generating response: ${error.message}`);
       attempt++;
       if (attempt >= retries) {
         return generatedOutput;
@@ -68,10 +72,12 @@ router.post('/', async (req, res) => {
       contextDocText = activeContextDocs.map(doc => doc.text).join('\n');
     }
 
-    let extendedContextText = `${contextDocText}\n${userContext}\n`;
-    let initialPromptConfig = [
-      { text: `Having context:\n'${extendedContextText}'\nAnswer me:\n'${transcription}'` },
-    ];
+    let extendedContextText = `${contextDocText}${userContext ? `\n${userContext}` : ''}`;
+    let initialPromptText = extendedContextText
+      ? `Having context:\n'${extendedContextText}'\nAnswer me:\n'${transcription}'`
+      : `Answer me:\n'${transcription}'`;
+
+    let initialPromptConfig = [{ text: initialPromptText }];
 
     const initialDiagnosisText = await generateResponse(initialPromptConfig);
 
@@ -96,7 +102,7 @@ router.post('/', async (req, res) => {
 
       newEntry = new TranscriptionHistory({
         email,
-        transcription: newPromptConfig,
+        transcription: newPromptConfig[0].text,
         diagnosisText,
         createdAt: new Date(),
       });
@@ -113,6 +119,7 @@ router.post('/', async (req, res) => {
 
     res.json({ responses: diagnosisResponses });
   } catch (error) {
+    console.error(`Error processing request: ${error.message}`);
     res.status(500).json({ error: 'An error occurred during processing' });
   }
 });

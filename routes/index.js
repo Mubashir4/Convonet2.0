@@ -4,7 +4,6 @@ const diagnosticGeminiRouter = require('./diagnosticGemini'); // Updated import
 const contextDocRouter = require('./contextDocRouter');
 const { transcribeAudio, upload } = require('./OpenAITranscribe');
 const { transcribeAudioOffline } = require('./OfflineTranscribe');
-const { EC2Client, DescribeInstancesCommand, StartInstancesCommand, StopInstancesCommand } = require("@aws-sdk/client-ec2");
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
@@ -16,15 +15,6 @@ const TranscriptionHistory = require('../models/transcriptionHistory');
 const ContextDoc = require('../models/contextDoc'); 
 const Prompt = require('../models/Prompt'); 
 const SUPPORTED_FORMATS = ['wav', 'mp3', 'm4a', 'flac'];
-
-// Replace with your actual credentials and region
-const region = 'us-east-1';
-const credentials = {
-  accessKeyId: 'AKIA3FLD2B6ZBO3CC2HL',
-  secretAccessKey: '8FNCBJCDLp2lR5v+RnjGf5LKtJy2zfhJuSP+veiT'
-};
-const ec2Client = new EC2Client({ region, credentials });
-const instanceId = 'i-0e46f240aebe2c3a3';
 
 const configFilePath = path.join(__dirname, 'config.json');
 
@@ -43,97 +33,14 @@ const writeConfig = (config) => {
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
-const getEc2Status = async () => {
-  try {
-    const data = await ec2Client.send(new DescribeInstancesCommand({ InstanceIds: [instanceId] }));
-    const instance = data.Reservations[0].Instances[0];
-    const ip = instance.PublicIpAddress || '0.0.0.0';
-    const status = instance.State.Name;
-
-    // Update the IP in the config file
-    const config = readConfig();
-    config.ec2_ip = ip;
-    writeConfig(config);
-
-    console.log(`Fetched IP from EC2: ${ip}`);
-    return {
-      status: status,
-      ip: ip
-    };
-  } catch (error) {
-    console.error('Failed to check EC2 status:', error);
-    throw error;
-  }
-};
-
-const startEc2Instance = async () => {
-  try {
-    const params = { InstanceIds: [instanceId] };
-    await ec2Client.send(new StartInstancesCommand(params));
-    const status = await getEc2Status();
-    console.log('EC2 instance started.');
-    return status;
-  } catch (error) {
-    console.error('Failed to start EC2 instance:', error);
-    throw error;
-  }
-};
-
-const stopEc2Instance = async () => {
-  try {
-    const params = { InstanceIds: [instanceId], Force: true  };
-    await ec2Client.send(new StopInstancesCommand(params));
-    console.log('EC2 instance stopped.');
-
-    // Update the IP in the config file
-    const config = readConfig();
-    config.ec2_ip = '0.0.0.0';
-    writeConfig(config);
-
-    return { status: 'stopped', ip: '0.0.0.0' };
-  } catch (error) {
-    console.error('Failed to stop EC2 instance:', error);
-    throw error;
-  }
-};
-
-router.get('/checkEc2Status', async (req, res) => {
-  try {
-    const status = await getEc2Status();
-    console.log(`EC2 status checked: ${status.status}, IP: ${status.ip}`);
-    res.status(200).json(status);
-  } catch (error) {
-    res.status(500).json({ msg: 'Failed to check EC2 status', error });
-  }
-});
-
-router.post('/startEc2', async (req, res) => {
-  try {
-    const status = await startEc2Instance();
-    console.log(`EC2 started. IP saved to config: ${status.ip}`);
-    res.status(200).json(status);
-  } catch (error) {
-    res.status(500).json({ msg: 'Failed to start EC2 instance', error });
-  }
-});
-
-router.post('/stopEc2', async (req, res) => {
-  try {
-    const status = await stopEc2Instance();
-    console.log('EC2 stopped. IP set to 0.0.0.0 in config.');
-    res.status(200).json(status);
-  } catch (error) {
-    res.status(500).json({ msg: 'Failed to stop EC2 instance', error });
-  }
-});
-
 // Save config route
 router.post('/saveConfig', (req, res) => {
-  const { n, temperature, audio_model } = req.body;
+  const { n, temperature, audio_model, ec2_ip } = req.body;
   let config = readConfig();
   config.n = n;
   config.temperature = temperature;
   config.audio_model = audio_model;
+  config.ec2_ip = ec2_ip; // Save EC2 IP
   writeConfig(config);
   res.status(200).json({ msg: 'Configuration saved' });
 });
