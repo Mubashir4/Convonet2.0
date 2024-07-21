@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const diagnosticGeminiRouter = require('./diagnosticGemini'); // Updated import
+const diagnosticGemini = require('./diagnosticGemini'); // Updated import
+const diagnostic = require('./diagnostic'); // Updated import
+const diagnosticUnified = require('./diagnosticUnified');
 const contextDocRouter = require('./contextDocRouter');
 const { transcribeAudio, upload } = require('./OpenAITranscribe');
 const { transcribeAudioOffline } = require('./OfflineTranscribe');
@@ -8,11 +10,9 @@ const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
 const pdfParse = require('pdf-parse');
-const docxParser = require('docx-parser');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const TranscriptionHistory = require('../models/transcriptionHistory');
-const ContextDoc = require('../models/contextDoc'); 
 const Prompt = require('../models/Prompt'); 
 const SUPPORTED_FORMATS = ['wav', 'mp3', 'm4a', 'flac'];
 
@@ -35,12 +35,13 @@ router.use(express.urlencoded({ extended: true }));
 
 // Save config route
 router.post('/saveConfig', (req, res) => {
-  const { n, temperature, audio_model, ec2_ip } = req.body;
+  const { n, temperature, audio_model, ec2_ip, diagnosis_model } = req.body; // Add diagnosis_model here
   let config = readConfig();
   config.n = n;
   config.temperature = temperature;
   config.audio_model = audio_model;
   config.ec2_ip = ec2_ip; // Save EC2 IP
+  config.diagnosis_model = diagnosis_model; // Save diagnosis model
   writeConfig(config);
   res.status(200).json({ msg: 'Configuration saved' });
 });
@@ -69,7 +70,22 @@ router.post('/transcribe', upload.single('audio'), (req, res) => {
 router.use('/contextDocs', contextDocRouter);
 
 // Use the diagnosticGemini router
-router.use('/diagnose', diagnosticGeminiRouter); // Updated router usage
+// Use the correct diagnostic router based on the diagnosis_model value
+/*
+router.post('/diagnose', (req, res, next) => {
+  const config = readConfig();
+  console.log(config.diagnosis_model);
+  if (config.diagnosis_model === '0') {
+    diagnostic(req, res, next); // GPT Model
+  } else {
+    diagnosticGemini(req, res, next); // Gemini Model
+  }
+});
+*/
+
+router.post('/diagnose', (req, res, next) => {
+  diagnosticUnified(req, res, next);
+});
 
 // Signup route
 router.post('/signup', async (req, res) => {
@@ -162,6 +178,9 @@ router.patch('/users/:id', async (req, res) => {
   }
 });
 
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
+
 // Get all prompts
 router.get('/prompts', async (req, res) => {
   try {
@@ -171,9 +190,6 @@ router.get('/prompts', async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 });
-
-const mongoose = require('mongoose');
-const { ObjectId } = mongoose.Types;
 
 // Create or update prompts
 router.post('/prompts', async (req, res) => {

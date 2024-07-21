@@ -6,8 +6,11 @@ const ContextDoc = require('../models/contextDoc');
 const Prompt = require('../models/Prompt');
 const TranscriptionHistory = require('../models/transcriptionHistory');
 const { ObjectId } = require('mongoose').Types;
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+require('dotenv').config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const readConfig = () => {
   const configFilePath = path.join(__dirname, 'config.json');
@@ -17,14 +20,25 @@ const readConfig = () => {
 
 let config = readConfig();
 
-// Function to log token usage
+const googleAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+
+const geminiConfig = {
+  temperature: parseFloat(config.temperature) || 0.4,
+  topP: 1,
+  topK: 32,
+};
+
+const geminiModel = googleAI.getGenerativeModel({
+  model: 'gemini-1.5-flash-latest',
+  geminiConfig,
+});
+
 const logTokenUsage = (usage) => {
   console.log(`Prompt tokens: ${usage.prompt_tokens}`);
   console.log(`Completion tokens: ${usage.completion_tokens}`);
   console.log(`Total tokens: ${usage.total_tokens}`);
 };
 
-// Function to call OpenAI API
 const callOpenAIAPI = async (messages, max_tokens, temperature, seed) => {
   try {
     const response = await axios.post('https://api.openai.com/v1/chat/completions', {
@@ -50,40 +64,47 @@ const callOpenAIAPI = async (messages, max_tokens, temperature, seed) => {
   }
 };
 
-// Function to handle retries with concatenation and exponential backoff
-const generateResponse = async (messages, max_tokens = null, retries = 3, initialDelay = 1000, temperature, seed) => {
+const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000, modelType) => {
   let attempt = 0;
-  let generatedOutput = ''; // Store generated output so far
+  let generatedOutput = '';
 
   while (attempt < retries) {
     try {
-      const response = await callOpenAIAPI(messages, max_tokens, temperature, seed);
-      generatedOutput += response; // Concatenate new response
+      let result;
+      if (modelType === 'Gemini') {
+        console.log('Using Gemini model');
+        result = await geminiModel.generateContent({
+          contents: [{ role: 'user', parts: promptConfig }],
+        });
+        const response = await result.response;
+        generatedOutput += response.text();
+      } else {
+        console.log('Using GPT model');
+        result = await callOpenAIAPI([{ role: 'user', content: promptConfig[0].text }], null, parseFloat(config.temperature) || 0.2, '');
+        generatedOutput += result;
+      }
       return generatedOutput;
     } catch (error) {
-      console.error(`Attempt ${attempt + 1} failed:`, error.message);
+      console.error(`Error generating response: ${error.message}`);
       attempt++;
       if (attempt >= retries) {
-        return generatedOutput; // Return what we have so far
+        return generatedOutput;
       }
-      const delay = initialDelay * Math.pow(2, attempt); // Exponential backoff
-      await new Promise(resolve => setTimeout(resolve, delay)); // Delay before retrying
-
-      // Prepare messages for continuation
-      messages.push({
-        role: 'assistant',
-        content: generatedOutput // Pass the generated output so far
-      });
+      const delay = initialDelay * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 };
 
-const diagnostic = async (req, res) => {
+const diagnosticUnified = async (req, res) => {
   const { email, transcription, userContext, useContextDoc } = req.body;
 
   if (!email || !transcription) {
     return res.status(400).json({ error: 'No email or transcription provided' });
   }
+
+  const config = readConfig();
+  const initialModelType = config.diagnosis_model === '0' ? 'GPT' : 'Gemini';
 
   try {
     let contextDocText = '';
@@ -92,61 +113,42 @@ const diagnostic = async (req, res) => {
       contextDocText = activeContextDocs.map(doc => doc.text).join('\n');
     }
 
-    let extendedContextText = `${contextDocText}\n${userContext}\n`;
-    let text = `Having context:\n'${extendedContextText}'\nAnswer me:\n'${transcription}'`;
+    let extendedContextText = `${contextDocText}${userContext ? `\n${userContext}` : ''}`;
+    let initialPromptText = extendedContextText
+      ? `Having context:\n'${extendedContextText}'\nAnswer me:\n'${transcription}'`
+      : `Answer me:\n'${transcription}'`;
 
-    // Prepare the initial messages
-    let messages = [
-      {
-        role: 'user',
-        content: text
-      }
-    ];
+    let initialPromptConfig = [{ text: initialPromptText }];
 
-    // Send the initial transcription to OpenAI API
-    const originalTemperature = parseFloat(config.temperature) || 0.2;
-    const seedOriginal = email + transcription; // Example seed for original query
-    const initialDiagnosisText = await generateResponse(messages, null, 3, 1000, originalTemperature, seedOriginal);
+    const initialDiagnosisText = await generateResponse(initialPromptConfig, 3, 1000, initialModelType);
 
-    // Save the initial transcription and diagnosis
     let newEntry = new TranscriptionHistory({
       email,
       transcription,
       diagnosisText: initialDiagnosisText,
-      createdAt: new Date()
+      createdAt: new Date(),
     });
     await newEntry.save();
 
-    // Process prompts asynchronously
     const prompts = await Prompt.find();
     const diagnosisResponses = [initialDiagnosisText];
 
-    for (const prompt of prompts) {
-      const newText = `Having context:\n'${extendedContextText}'\n and original response ${initialDiagnosisText}\nApply prompt:\n${prompt.text}\nElaborate each part further`;
-
-      // Update messages for the new prompt
-      messages = [
-        {
-          role: 'user',
-          content: newText
-        }
+    for (const promptObj of prompts) {
+      const newPromptConfig = [
+        { text: `Having context:\n'${extendedContextText}'\n and original response ${initialDiagnosisText}\nApply prompt:\n${promptObj.text}\nElaborate each part further` },
       ];
 
-      const promptTemperature = originalTemperature + 0.1;
-      const seedPrompt = email + prompt.text; // Example different seed for prompt
-      const diagnosisText = await generateResponse(messages, null, 3, 1000, promptTemperature, seedPrompt);
+      const diagnosisText = await generateResponse(newPromptConfig, 3, 1000, promptObj.modelType);
       diagnosisResponses.push(diagnosisText);
 
-      // Save each prompt's transcription and diagnosis
       newEntry = new TranscriptionHistory({
         email,
-        transcription: newText,
+        transcription: newPromptConfig[0].text,
         diagnosisText,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
       await newEntry.save();
 
-      // Ensure the user has at most 30 records
       const historyCount = await TranscriptionHistory.countDocuments({ email });
       if (historyCount > 30) {
         const oldestEntry = await TranscriptionHistory.findOne({ email }).sort({ createdAt: 1 });
@@ -158,9 +160,9 @@ const diagnostic = async (req, res) => {
 
     res.json({ responses: diagnosisResponses });
   } catch (error) {
-    console.error('Error processing request:', error.message);
+    console.error(`Error processing request: ${error.message}`);
     res.status(500).json({ error: 'An error occurred during processing' });
   }
 };
 
-module.exports = diagnostic;
+module.exports = diagnosticUnified;

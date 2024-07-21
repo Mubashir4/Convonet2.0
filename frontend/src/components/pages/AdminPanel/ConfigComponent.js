@@ -10,9 +10,8 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
   const [temperature, setTemperature] = useState('');
   const [audioModel, setAudioModel] = useState('0');
   const [ec2Ip, setEc2Ip] = useState('');
+  const [diagnosisModel, setDiagnosisModel] = useState('0'); // Initialize diagnosis model state
   const [loading, setLoading] = useState(false);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState('');
 
   const loadConfig = async () => {
     try {
@@ -22,6 +21,7 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
       setTemperature(config.temperature);
       setAudioModel(config.audio_model);
       setEc2Ip(config.ec2_ip); // Load EC2 IP
+      setDiagnosisModel(config.diagnosis_model.toString()); // Load diagnosis model
     } catch (error) {
       console.error('Error loading configuration:', error);
       setSnackbarMessage('Error loading configuration');
@@ -36,7 +36,7 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
 
   const saveConfig = async () => {
     try {
-      await axios.post(`${CONFIG.SERVER_IP}/api/saveConfig`, { n: nValue, temperature, audio_model: audioModel, ec2_ip: ec2Ip }); // Save EC2 IP
+      await axios.post(`${CONFIG.SERVER_IP}/api/saveConfig`, { n: nValue, temperature, audio_model: audioModel, ec2_ip: ec2Ip, diagnosis_model: diagnosisModel }); // Save EC2 IP and diagnosis model
       setSnackbarMessage('Configuration saved successfully');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -61,6 +61,10 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
 
   const handleEc2IpChange = (e) => {
     setEc2Ip(e.target.value); // Handle EC2 IP change
+  };
+
+  const handleDiagnosisModelChange = (e) => {
+    setDiagnosisModel(e.target.value); // Handle diagnosis model change
   };
 
   return (
@@ -116,6 +120,13 @@ const ConfigComponent = ({ setSnackbarMessage, setSnackbarSeverity, setSnackbarO
         <RadioGroup value={audioModel} onChange={handleAudioModelChange}>
           <FormControlLabel value="0" control={<Radio sx={{ color: 'red', '&.Mui-checked': { color: 'red' } }} />} label="OpenAI Whisper" />
           <FormControlLabel value="1" control={<Radio />} label="Offline Whisper" />
+        </RadioGroup>
+      </Box>
+      <Box className="config-column">
+        <Typography variant="h6" sx={{ color: 'black' }}>Diagnosis Model</Typography>
+        <RadioGroup value={diagnosisModel} onChange={handleDiagnosisModelChange}>
+          <FormControlLabel value="0" control={<Radio />} label="GPT" />
+          <FormControlLabel value="1" control={<Radio />} label="Gemini" />
         </RadioGroup>
       </Box>
       <Box className="config-save-row">

@@ -1,3 +1,4 @@
+// Transcribe.js
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Button, Typography, TextField, Snackbar, Alert, IconButton } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
@@ -7,10 +8,10 @@ import axios from 'axios';
 import { encryptData, decryptData } from '../utils/encryption'; // Use encryption utilities
 import CONFIG from '../../.config'; // Import the config
 import '../styles/Transcribe.css';
+import { useTranscription } from './TranscriptionContext'; // Import the context hook
 
 const Transcribe = () => {
-  const [transcription, setTranscription] = useState('');
-  const [transcriptionHistory, setTranscriptionHistory] = useState('');
+  const { transcription, setTranscription, transcriptionHistory, setTranscriptionHistory } = useTranscription();
   const [isRecording, setIsRecording] = useState(false);
   const [counter, setCounter] = useState(0); // Define counter and setCounter
   const [intervalTime, setIntervalTime] = useState(30); // Interval time state in seconds
@@ -23,22 +24,6 @@ const Transcribe = () => {
   const streamRef = useRef(null);
   const textareaRef = useRef(null);
   const recordingIntervalRef = useRef(null); // Interval for recordings
-
-  useEffect(() => {
-    const savedHistory = sessionStorage.getItem('transcriptionHistory');
-    if (savedHistory) {
-      const decryptedHistory = decryptData(savedHistory);
-      setTranscription(decryptedHistory);
-    }
-  }, []);
-
-  useEffect(() => {
-    sessionStorage.setItem('transcription', encryptData(transcription));
-  }, [transcription]);
-
-  useEffect(() => {
-    sessionStorage.setItem('transcriptionHistory', encryptData(transcriptionHistory));
-  }, [transcriptionHistory]);
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);

@@ -58,7 +58,7 @@ const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000) 
   }
 };
 
-router.post('/', async (req, res) => {
+const diagnosticGemini = async (req, res) => {
   const { email, transcription, userContext, useContextDoc } = req.body;
 
   if (!email || !transcription) {
@@ -122,6 +122,6 @@ router.post('/', async (req, res) => {
     console.error(`Error processing request: ${error.message}`);
     res.status(500).json({ error: 'An error occurred during processing' });
   }
-});
+};
 
-module.exports = router;
+module.exports = diagnosticGemini;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Button, TextField, Snackbar, Alert, Typography, CircularProgress, FormControl, Select, MenuItem, Backdrop, IconButton } from '@mui/material';
+import { Box, Button, TextField, Snackbar, Alert, Typography, CircularProgress, Backdrop, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -9,30 +9,29 @@ import axios from 'axios';
 import { decryptData, encryptData } from '../utils/encryption';
 import '../styles/Diagnosis.css';
 import CONFIG from '../../.config';
-
-const prompts = [
-];
+import { useTranscription } from './TranscriptionContext'; // Import the context hook
 
 const MakeNotes = () => {
-  const [transcription, setTranscription] = useState('');
+  const { transcription, setTranscription, transcriptionHistory, setTranscriptionHistory } = useTranscription();
   const [diagnosis, setDiagnosis] = useState([]);
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-  const [selectedPrompt, setSelectedPrompt] = useState('Choose from pre-defined prompts');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [promptIndex, setPromptIndex] = useState(-1); // -1 indicates the initial run without any prompt
   const [backdropOpen, setBackdropOpen] = useState(false);
   const transcriptionRef = useRef(null);
 
   useEffect(() => {
+    // Set userContext to empty string when entering the page
+    sessionStorage.setItem('userContext', encryptData(''));
+
     const savedTranscription = sessionStorage.getItem('transcription');
     if (savedTranscription) {
       const decryptedTranscription = decryptData(savedTranscription);
       if (decryptedTranscription) {
-        setTranscription(decryptedTranscription);
-        generateDiagnosis(decryptedTranscription, -1); // Initial run without any prompt
+        //setTranscription(decryptedTranscription);
+        generateDiagnosis(decryptedTranscription); // Initial run without any prompt
       } else {
         console.error('Failed to decrypt transcription data');
       }
@@ -40,6 +39,11 @@ const MakeNotes = () => {
 
     const useContextDocPreference = sessionStorage.getItem('useContextDoc');
     sessionStorage.setItem('useContextDoc', useContextDocPreference !== 'false' ? 'true' : 'false');
+
+    return () => {
+      // Set userContext to empty string when leaving the page
+      sessionStorage.setItem('userContext', encryptData(''));
+    };
   }, []);
 
   useEffect(() => {
@@ -48,7 +52,7 @@ const MakeNotes = () => {
     }
   }, [transcription]);
 
-  const generateDiagnosis = async (text, currentPromptIndex) => {
+  const generateDiagnosis = async (text) => {
     setLoading(true);
     setBackdropOpen(true);
     const encryptedUser = sessionStorage.getItem('user');
@@ -70,8 +74,6 @@ const MakeNotes = () => {
     const encryptedUserContext = sessionStorage.getItem('userContext');
     const userContext = encryptedUserContext ? decryptData(encryptedUserContext) : '';
 
-    const prompt = currentPromptIndex >= 0 ? prompts[currentPromptIndex] : '';
-
     try {
       const response = await axios.post(`${CONFIG.SERVER_IP}/api/diagnose`, {
         email,
@@ -82,19 +84,14 @@ const MakeNotes = () => {
 
       const encryptedResponses = response.data.responses.map(resp => encryptData(resp));
       const newResponse = response.data.responses[0];
-      const newText = prompt ? `${text}\n${newResponse}\n${prompt}` : text;
+      const newText = `${text}\n${newResponse}`;
       setDiagnosis(encryptedResponses);
       setCurrentIndex(encryptedResponses.length - 1);
-      setTranscription(newText);
+      //setTranscription(newText);
       setSnackbarMessage('Diagnosis completed successfully');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
-
-      if (currentPromptIndex + 1 < prompts.length) {
-        executePrompts(newText, currentPromptIndex + 1);
-      } else {
-        setBackdropOpen(false);
-      }
+      setBackdropOpen(false);
     } catch (error) {
       console.error('Error fetching diagnosis:', error);
       setSnackbarMessage('Error fetching diagnosis');
@@ -104,11 +101,6 @@ const MakeNotes = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const executePrompts = (text, index) => {
-    setPromptIndex(index);
-    generateDiagnosis(text, index);
   };
 
   const handleDiagnosis = () => {
@@ -129,7 +121,7 @@ const MakeNotes = () => {
     sessionStorage.setItem('userContext', encryptData(userContext));
     sessionStorage.setItem('transcription', encryptData(transcription));
 
-    executePrompts(transcription, 0);
+    generateDiagnosis(transcription);
     setTranscription('');
   };
 
@@ -154,14 +146,6 @@ const MakeNotes = () => {
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
-  };
-
-  const handlePromptChange = (event) => {
-    const value = event.target.value;
-    setSelectedPrompt(value);
-    if (value !== "Choose from pre-defined prompts") {
-      setTranscription(value);
-    }
   };
 
   const handlePreviousResponse = () => {
@@ -224,39 +208,17 @@ const MakeNotes = () => {
         <Box className="ai-diagnosis-textfield">
           <pre style={{ whiteSpace: 'pre-wrap', overflowY: 'auto' }}>{diagnosis.length > 0 ? decryptData(diagnosis[currentIndex]) : ''}</pre>
           <Button
-          variant="contained"
-          color="primary"
-          startIcon={<ContentCopyIcon />}
-          onClick={handleCopyToClipboard}
-          sx={{ position: 'absolute', top: 10, right: 10 }}
-        >
-          Copy
-        </Button>
+            variant="contained"
+            color="primary"
+            startIcon={<ContentCopyIcon />}
+            onClick={handleCopyToClipboard}
+            sx={{ position: 'absolute', top: 10, right: 10 }}
+          >
+            Copy
+          </Button>
         </Box>
         <Button onClick={handleNextResponse} disabled={currentIndex === diagnosis.length - 1}><ArrowForwardIcon /></Button>
       </Box>
-      {/* <FormControl sx={{ marginTop: 1, marginBottom: 2, backgroundColor: '#e40a1c', width: '350px', marginLeft:'100px' }}>
-        <Select
-          labelId="prompt-select-label"
-          id="prompt-select"
-          value={selectedPrompt}
-          label="Choose from pre-defined prompts"
-          onChange={handlePromptChange}
-          MenuProps={{
-            PaperProps: {
-              style: {
-                maxHeight: 200, // Adjust the max height as needed
-                wordWrap: 'break-word'
-              }
-            }
-          }}
-        >
-          <MenuItem value="Choose from pre-defined prompts" className="menu-item">Choose from pre-defined prompts</MenuItem>
-          {prompts.map((prompt, index) => (
-            <MenuItem key={index} value={prompt} className="menu-item">{prompt}</MenuItem>
-          ))}
-        </Select>
-      </FormControl> */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={2000}
@@ -267,7 +229,7 @@ const MakeNotes = () => {
         </Alert>
       </Snackbar>
       <Backdrop open={backdropOpen} style={{ color: '#fff', zIndex: 1000 }}>
-        <Typography variant="h6">Processing Prompt: {promptIndex === -1 ? "Initial Query" : promptIndex + 1}</Typography>
+        <Typography variant="h6">Processing</Typography>
         <CircularProgress color="inherit" />
       </Backdrop>
     </Box>

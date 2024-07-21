@@ -5,6 +5,12 @@ const promptSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  modelType: {
+    type: String,
+    required: true,
+    enum: ['GPT', 'Gemini'],
+    default: 'GPT'
+  },
   created_at: {
     type: Date,
     default: Date.now,
