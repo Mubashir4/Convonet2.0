@@ -177,7 +177,7 @@ const MakeNotes = () => {
           variant="outlined"
           multiline
           fullWidth
-          rows={2}
+          rows={6}
           value={transcription}
           onChange={(e) => setTranscription(e.target.value)}
           className="diagnosis-textfield"
