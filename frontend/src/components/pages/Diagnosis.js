@@ -93,8 +93,8 @@ const MakeNotes = () => {
       setSnackbarOpen(true);
       setBackdropOpen(false);
     } catch (error) {
-      console.error('Error fetching diagnosis:', error);
-      setSnackbarMessage('Error fetching diagnosis');
+      console.error('Error fetching Notes:', error);
+      setSnackbarMessage('Error fetching Notes', error);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
       setBackdropOpen(false);

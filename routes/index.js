@@ -18,6 +18,62 @@ const SUPPORTED_FORMATS = ['wav', 'mp3', 'm4a', 'flac'];
 
 const configFilePath = path.join(__dirname, 'config.json');
 
+const envFilePath = path.join(__dirname, './.env');
+
+// Load .env file
+const loadEnv = () => {
+  console.log('Loading .env file');
+  const env = dotenv.parse(fs.readFileSync(envFilePath));
+  console.log('Loaded .env file:', env);
+  return env;
+};
+
+// Save to .env file
+const saveEnv = (env) => {
+  console.log('Saving to .env file:', env);
+  const envString = Object.keys(env)
+    .map(key => `${key}=${env[key]}`)
+    .join('\n');
+  fs.writeFileSync(envFilePath, envString);
+  console.log('Saved .env file');
+};
+
+// Fetch keys
+router.get('/api/keys', (req, res) => {
+  console.log('GET /api/keys request received');
+  try {
+    const env = loadEnv();
+    res.json({
+      OPENAI_API_KEY: env.OPENAI_API_KEY,
+      GEMINI_API_KEY: env.GEMINI_API_KEY
+    });
+    console.log('Responded with keys:', {
+      OPENAI_API_KEY: env.OPENAI_API_KEY,
+      GEMINI_API_KEY: env.GEMINI_API_KEY
+    });
+  } catch (error) {
+    console.error('Error fetching keys:', error);
+    res.status(500).json({ msg: 'Error fetching keys' });
+  }
+});
+
+// Update keys
+router.post('/api/keys', (req, res) => {
+  console.log('POST /api/keys request received with body:', req.body);
+  try {
+    const { OPENAI_API_KEY, GEMINI_API_KEY } = req.body;
+    let env = loadEnv();
+    env.OPENAI_API_KEY = OPENAI_API_KEY;
+    env.GEMINI_API_KEY = GEMINI_API_KEY;
+    saveEnv(env);
+    res.status(200).json({ msg: 'Keys updated successfully' });
+    console.log('Keys updated successfully');
+  } catch (error) {
+    console.error('Error updating keys:', error);
+    res.status(500).json({ msg: 'Error updating keys' });
+  }
+});
+
 // Read the config file
 const readConfig = () => {
   const rawData = fs.readFileSync(configFilePath);

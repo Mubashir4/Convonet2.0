@@ -38,7 +38,7 @@ const ContextDocsComponent = ({ contextDocs = [], setContextDocs, setSnackbarMes
     formData.append('email', email); // Add email to form data
 
     try {
-      await axios.post(`http://localhost:5000/api/contextDocs/upload`, formData, {
+      await axios.post(`${CONFIG.SERVER_IP}/api/contextDocs/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

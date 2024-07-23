@@ -5,6 +5,7 @@ import ContextDocsComponent from './AdminPanel/ContextDocsComponent';
 import ConfigComponent from './AdminPanel/ConfigComponent';
 import CustomPromptsComponent from './AdminPanel/CustomPromptsComponent';
 import UsersComponent from './AdminPanel/UsersComponent';
+import KeysComponent from './AdminPanel/KeysComponent'; // Import the new Keys component
 import { decryptData } from '../utils/encryption';
 import CONFIG from '../../.config';
 import '../styles/AdminPanel.css';
@@ -150,6 +151,23 @@ const AdminPanel = () => {
           >
             Configuration
           </ToggleButton>
+          <ToggleButton
+            value="keys"
+            aria-label="Keys"
+            sx={{
+              backgroundColor: 'grey.900',
+              color: 'white',
+              '&.Mui-selected': {
+                backgroundColor: 'primary.main',
+                color: 'white',
+              },
+              '&:hover': {
+                backgroundColor: 'grey.800',
+              },
+            }}
+          >
+            Keys
+          </ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
@@ -189,6 +207,14 @@ const AdminPanel = () => {
           setNValue={setNValue}
           temperature={temperature}
           setTemperature={setTemperature}
+          setSnackbarMessage={setSnackbarMessage}
+          setSnackbarSeverity={setSnackbarSeverity}
+          setSnackbarOpen={setSnackbarOpen}
+        />
+      )}
+
+      {selectedSection === 'keys' && (
+        <KeysComponent
           setSnackbarMessage={setSnackbarMessage}
           setSnackbarSeverity={setSnackbarSeverity}
           setSnackbarOpen={setSnackbarOpen}
