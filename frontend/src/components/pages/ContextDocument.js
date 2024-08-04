@@ -13,26 +13,21 @@ const ContextDocument = () => {
   const [imageData, setImageData] = useState(null);
 
   useEffect(() => {
-    window.addEventListener('message', handleImageMessage);
-    return () => {
-      window.removeEventListener('message', handleImageMessage);
-    };
-  }, []);
-
-  const handleImageMessage = (event) => {
-    if (event.data.image) {
-      setImageData(event.data.image);
+    const storedImage = localStorage.getItem('capturedImage');
+    if (storedImage) {
+      setImageData(storedImage);
       Tesseract.recognize(
-        event.data.image,
+        storedImage,
         'eng',
         {
           logger: (m) => console.log(m)
         }
       ).then(({ data: { text } }) => {
         handleTextExtracted(text);
+        localStorage.removeItem('capturedImage'); // Clear the stored image after processing
       });
     }
-  };
+  }, []);
 
   const handleDocumentChange = (e) => {
     setDocument(e.target.value);

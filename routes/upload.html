@@ -46,16 +46,26 @@
     const sendButton = document.getElementById('send-button');
     const errorMessage = document.getElementById('error-message');
 
-    // Access the device camera and stream to the video element
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        console.error('Error accessing camera: ', err);
-        errorMessage.textContent = `Error accessing camera: ${err.message}`;
-        errorMessage.style.display = 'block';
-      });
+    // Function to start video stream with desired constraints
+    function startVideoStream(constraints) {
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(stream => {
+          video.srcObject = stream;
+        })
+        .catch(err => {
+          console.error('Error accessing camera: ', err);
+          errorMessage.textContent = `Error accessing camera: ${err.message}`;
+          errorMessage.style.display = 'block';
+        });
+    }
+
+    // Try to access the back camera
+    const constraints = {
+      video: { facingMode: { exact: "environment" } }
+    };
+
+    // Start video stream
+    startVideoStream(constraints);
 
     // Capture the image from the video stream
     captureButton.addEventListener('click', () => {
@@ -81,20 +91,15 @@
       sendButton.style.display = 'none';
     });
 
-    // Send the image back to the ContextDocument page
+    // Send the image back to the ContextDocument page using localStorage
     sendButton.addEventListener('click', () => {
       const imageDataURL = canvas.toDataURL('image/png');
-      if (window.opener) {
-        try {
-          window.opener.postMessage({ image: imageDataURL }, '*');
-          window.close();
-        } catch (e) {
-          console.error('Error sending image data:', e);
-          errorMessage.textContent = `Error sending image data: ${e.message}`;
-          errorMessage.style.display = 'block';
-        }
-      } else {
-        errorMessage.textContent = 'Error: This page must be opened by another window to send data back.';
+      try {
+        localStorage.setItem('capturedImage', imageDataURL);
+        window.close();
+      } catch (e) {
+        console.error('Error storing image data:', e);
+        errorMessage.textContent = `Error storing image data: ${e.message}`;
         errorMessage.style.display = 'block';
       }
     });
