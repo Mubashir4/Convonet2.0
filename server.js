@@ -29,6 +29,11 @@ mongoose.connect(process.env.MONGODB_URI, {
 // API routes
 app.use('/api', routes);
 
+// Serve the upload.html file
+app.get('/upload', (req, res) => {
+  res.sendFile(path.join(__dirname, 'routes', 'upload.html'));
+});
+
 // Serve static files from the React frontend app
 app.use(express.static(path.join(__dirname, 'frontend', 'build')));
 

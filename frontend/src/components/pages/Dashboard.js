@@ -29,7 +29,7 @@ const Dashboard = () => {
       if (user.role === 'admin') {
         setSelectedOption('Admin Panel');
       } else {
-        setSelectedOption('Transcribe');
+        setSelectedOption('My Notes');
       }
     }
   }, [navigate]);
@@ -52,8 +52,8 @@ const Dashboard = () => {
     switch (selectedOption) {
       case 'Admin Panel':
         return <AdminPanel />;
-      //case 'My Notes':
-      //  return <ContextDocument />;
+      case 'My Notes':
+        return <ContextDocument />;
       case 'Transcribe':
         return <Transcribe />;
       case 'Make Notes':

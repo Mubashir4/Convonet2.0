@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, TextField, Snackbar, Alert, FormControlLabel, Checkbox } from '@mui/material';
-import { encryptData, decryptData } from '../utils/encryption';
-import ImageUpload from './ImageUpload';
+import { Box, Button, Typography, TextField, Snackbar, Alert } from '@mui/material';
+import QRCode from 'qrcode.react';
+import Tesseract from 'tesseract.js';
 import '../styles/ContextDocument.css';
 
 const ContextDocument = () => {
@@ -9,34 +9,37 @@ const ContextDocument = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-  const [useContext, setUseContext] = useState(true);
+  const [qrCodeVisible, setQrCodeVisible] = useState(false);
   const [imageData, setImageData] = useState(null);
 
   useEffect(() => {
-    const encryptedDocument = sessionStorage.getItem('userContext');
-    const decryptedDocument = encryptedDocument ? decryptData(encryptedDocument) : '';
-    setDocument(decryptedDocument);
-
-    const useContextPreference = sessionStorage.getItem('useContextDoc');
-    setUseContext(useContextPreference !== 'false');
-
-    const params = new URLSearchParams(window.location.search);
-    const image = params.get('image');
-    if (image) {
-      setImageData(image);
-    }
+    window.addEventListener('message', handleImageMessage);
+    return () => {
+      window.removeEventListener('message', handleImageMessage);
+    };
   }, []);
 
+  const handleImageMessage = (event) => {
+    if (event.data.image) {
+      setImageData(event.data.image);
+      Tesseract.recognize(
+        event.data.image,
+        'eng',
+        {
+          logger: (m) => console.log(m)
+        }
+      ).then(({ data: { text } }) => {
+        handleTextExtracted(text);
+      });
+    }
+  };
+
   const handleDocumentChange = (e) => {
-    const newDocument = e.target.value;
-    setDocument(newDocument);
-    const encryptedDocument = encryptData(newDocument);
-    sessionStorage.setItem('userContext', encryptedDocument);
+    setDocument(e.target.value);
   };
 
   const handleClear = () => {
     setDocument('');
-    sessionStorage.removeItem('userContext');
     setSnackbarMessage('Notes cleared successfully');
     setSnackbarSeverity('success');
     setSnackbarOpen(true);
@@ -46,46 +49,32 @@ const ContextDocument = () => {
     setSnackbarOpen(false);
   };
 
-  const handleCheckboxChange = (event) => {
-    setUseContext(event.target.checked);
+  const handleQrCodeToggle = () => {
+    setQrCodeVisible(!qrCodeVisible);
   };
 
   const handleTextExtracted = (text) => {
-    setDocument(prevDocument => {
-      const newDocument = `${prevDocument}\n${text}`;
-      const encryptedDocument = encryptData(newDocument);
-      sessionStorage.setItem('userContext', encryptedDocument);
-      return newDocument;
-    });
+    setDocument(prevDocument => `${prevDocument}\n${text}`);
   };
 
   return (
     <Box className="context-document-container">
       <Typography variant="h4" className="context-document-title">ADD YOUR NOTES</Typography>
       <Box className="context-document-actions">
-        
-        {/* Remove or disable Save button as required */}
-        {/* <Button
+        <Button
           variant="contained"
-          color="secondary"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={true} // Disable instead of removing if needed
+          color="primary"
+          onClick={handleQrCodeToggle}
+          className="qr-code-button"
         >
-          Save
-        </Button> */}
-      </Box>
-      
-        
-      
-      <Button
-          variant="contained"
-          color="error"
-          onClick={handleClear}
-          className="clear-button"
-        >
-          Clear
+          {qrCodeVisible ? 'Hide QR Code' : 'Show QR Code'}
         </Button>
+      </Box>
+      {qrCodeVisible && (
+        <Box className="qr-code-container">
+          <QRCode value="https://convonote.com/upload" size={256} />
+        </Box>
+      )}
       <TextField
         variant="outlined"
         multiline
@@ -94,9 +83,16 @@ const ContextDocument = () => {
         value={document}
         onChange={handleDocumentChange}
       />
+      <Button
+        variant="contained"
+        color="error"
+        onClick={handleClear}
+        className="clear-button"
+      >
+        Clear
+      </Button>
       <Box className="context-document-clear-button-container">
-      {imageData && <img src={imageData} alt="Captured" />}
-      <ImageUpload onTextExtracted={handleTextExtracted} /> {/* Add ImageUpload component */}
+        {imageData && <img src={imageData} alt="Captured" className="uploaded-image" />}
       </Box>
       <Snackbar
         open={snackbarOpen}

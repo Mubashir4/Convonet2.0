@@ -112,6 +112,11 @@ router.get('/getConfig', (req, res) => {
   }
 });
 
+// Serve the QR code image upload page
+router.get('/upload', (req, res) => {
+  res.sendFile(path.join(__dirname, 'upload.html'));
+});
+
 // Route to handle audio transcription
 router.post('/transcribe', upload.single('audio'), (req, res) => {
   const config = readConfig();

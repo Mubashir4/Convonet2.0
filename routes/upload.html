@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Image</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+  <style>
+    #camera-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+    #image-preview {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+    #action-buttons {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title">Upload an Image</h1>
+      <div id="camera-container">
+        <video id="camera" autoplay playsinline width="100%" style="max-width: 100%;"></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <img id="image-preview" src="" alt="Image Preview" style="display:none;">
+        <div id="action-buttons">
+          <button class="button is-primary" id="capture-button">Capture Image</button>
+          <button class="button is-warning" id="retake-button" style="display:none;">Retake Image</button>
+          <button class="button is-success" id="send-button" style="display:none;">Send Image</button>
+        </div>
+        <p id="error-message" class="has-text-danger" style="display:none;"></p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const imagePreview = document.getElementById('image-preview');
+    const captureButton = document.getElementById('capture-button');
+    const retakeButton = document.getElementById('retake-button');
+    const sendButton = document.getElementById('send-button');
+    const errorMessage = document.getElementById('error-message');
+
+    // Access the device camera and stream to the video element
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error('Error accessing camera: ', err);
+        errorMessage.textContent = `Error accessing camera: ${err.message}`;
+        errorMessage.style.display = 'block';
+      });
+
+    // Capture the image from the video stream
+    captureButton.addEventListener('click', () => {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const imageDataURL = canvas.toDataURL('image/png');
+      imagePreview.src = imageDataURL;
+      imagePreview.style.display = 'block';
+
+      captureButton.style.display = 'none';
+      retakeButton.style.display = 'inline-block';
+      sendButton.style.display = 'inline-block';
+    });
+
+    // Retake the image
+    retakeButton.addEventListener('click', () => {
+      imagePreview.style.display = 'none';
+      captureButton.style.display = 'inline-block';
+      retakeButton.style.display = 'none';
+      sendButton.style.display = 'none';
+    });
+
+    // Send the image back to the ContextDocument page
+    sendButton.addEventListener('click', () => {
+      const imageDataURL = canvas.toDataURL('image/png');
+      try {
+        window.opener.postMessage({ image: imageDataURL }, '*');
+        window.close();
+      } catch (e) {
+        console.error('Error sending image data:', e);
+        errorMessage.textContent = `Error sending image data: ${e.message}`;
+        errorMessage.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

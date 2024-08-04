@@ -4,12 +4,10 @@
   align-items: flex-start;
   padding: 20px;
   width: 100%;
-  height: calc(100vh - 80px); /* Adjust height to fit screen */
+  height: calc(100vh - 80px);
   box-sizing: border-box;
   overflow: auto;
   background-color: rgb(255, 254, 253);
-  background-size: cover;
-  background-position: center;
 }
 
 .context-document-title {
@@ -19,27 +17,39 @@
 .context-document-actions {
   display: flex;
   align-items: center;
-  margin-top: 20px;
   margin-bottom: 20px;
-}
-
-.textarea-container {
-  position: relative;
-  width: 100%;
-}
-
-.clear-button {
-  position: absolute;
-  top: -10px; /* Adjust the position as needed */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
 }
 
 .context-document-textarea {
   flex-grow: 1;
-  height: 100%; /* Adjust height to fill remaining space */
-  resize: vertical; /* Allow vertical resizing */
+  width: 50%;
+  height: calc(100vh - 140px);
+  resize: vertical;
   background: rgb(255, 255, 255);
-  padding-top: 30px; /* Make space for the clear button */
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.clear-button {
+  margin-top: 20px;
+}
+
+.qr-code-button {
+  font-size: 18px;
+  padding: 10px 20px;
+}
+
+.qr-code-container {
+  margin: 20px 0;
+}
+
+.upload-button {
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.uploaded-image {
+  margin-top: 20px;
+  max-width: 100%;
+  height: auto;
 }
