@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, TextField, Snackbar, Alert } from '@mui/material';
+import { Box, Button, Typography, TextField, CircularProgress, Snackbar, Alert } from '@mui/material';
 import QRCode from 'qrcode.react';
 import Tesseract from 'tesseract.js';
+import axios from 'axios';
 import '../styles/ContextDocument.css';
 
 const ContextDocument = () => {
@@ -10,23 +11,33 @@ const ContextDocument = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [qrCodeVisible, setQrCodeVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [imageData, setImageData] = useState(null);
 
   useEffect(() => {
-    const storedImage = localStorage.getItem('capturedImage');
-    if (storedImage) {
-      setImageData(storedImage);
-      Tesseract.recognize(
-        storedImage,
-        'eng',
-        {
-          logger: (m) => console.log(m)
+    const checkForImage = setInterval(async () => {
+      try {
+        const response = await axios.get('/api/check-image');
+        if (response.data.imageDataURL) {
+          clearInterval(checkForImage);
+          setImageData(response.data.imageDataURL);
+          Tesseract.recognize(
+            response.data.imageDataURL,
+            'eng',
+            {
+              logger: (m) => console.log(m)
+            }
+          ).then(({ data: { text } }) => {
+            handleTextExtracted(text);
+            setLoading(false);
+          });
         }
-      ).then(({ data: { text } }) => {
-        handleTextExtracted(text);
-        localStorage.removeItem('capturedImage'); // Clear the stored image after processing
-      });
-    }
+      } catch (error) {
+        console.error('Error checking for image:', error);
+      }
+    }, 5000);
+
+    return () => clearInterval(checkForImage);
   }, []);
 
   const handleDocumentChange = (e) => {
@@ -44,8 +55,19 @@ const ContextDocument = () => {
     setSnackbarOpen(false);
   };
 
-  const handleQrCodeToggle = () => {
+  const handleQrCodeToggle = async () => {
     setQrCodeVisible(!qrCodeVisible);
+    setLoading(true);
+
+    try {
+      await axios.get('/api/start-upload');
+    } catch (error) {
+      console.error('Error starting upload:', error);
+      setSnackbarMessage('Error starting upload');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      setLoading(false);
+    }
   };
 
   const handleTextExtracted = (text) => {
@@ -69,6 +91,9 @@ const ContextDocument = () => {
         <Box className="qr-code-container">
           <QRCode value="https://convonote.com/upload" size={256} />
         </Box>
+      )}
+      {loading && (
+        <CircularProgress />
       )}
       <TextField
         variant="outlined"

@@ -112,9 +112,18 @@ router.get('/getConfig', (req, res) => {
   }
 });
 
-// Serve the QR code image upload page
-router.get('/upload', (req, res) => {
+// Serve the upload.html file on demand
+router.get('/start-upload', (req, res) => {
   res.sendFile(path.join(__dirname, 'upload.html'));
+});
+
+// Handle the image data sent from upload.html
+router.post('/receive-image', (req, res) => {
+  const { imageDataURL } = req.body;
+  // Store the imageDataURL in memory or a database
+  // Here we assume in-memory storage for simplicity
+  global.imageDataURL = imageDataURL;
+  res.json({ success: true });
 });
 
 // Route to handle audio transcription
