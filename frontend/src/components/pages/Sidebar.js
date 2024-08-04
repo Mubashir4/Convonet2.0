@@ -16,7 +16,7 @@ const Sidebar = ({ doctorName, onOptionSelect, isOpen, toggleSidebar, isAdmin, o
     if (isAdmin) {
       setSelectedOption('Admin Panel');
     } else {
-      setSelectedOption('My Notes');
+      setSelectedOption('Transcribe');
     }
   }, [isAdmin]);
 
@@ -25,7 +25,7 @@ const Sidebar = ({ doctorName, onOptionSelect, isOpen, toggleSidebar, isAdmin, o
   };
 
   const adminOptions = isAdmin ? ['Admin Panel'] : [];
-  const userOptions = ['My Notes','Transcribe', 'Make Notes', 'History']; // Add new page here
+  const userOptions = ['Transcribe', 'Make Notes', 'History']; // Add new page here
 
   useEffect(() => {
     const dashboardContainer = document.querySelector('.dashboard-container');

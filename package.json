@@ -22,6 +22,7 @@
     "docx-parser": "^0.2.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-fileupload": "^1.5.1",
     "form-data": "^4.0.0",
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",

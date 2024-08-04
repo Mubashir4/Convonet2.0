@@ -1,51 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, TextField, CircularProgress, Snackbar, Alert } from '@mui/material';
-import QRCode from 'qrcode.react';
-import Tesseract from 'tesseract.js';
-import axios from 'axios';
+import { Box, Button, Typography, TextField, Snackbar, Alert } from '@mui/material';
+import ImageUpload from './ImageUpload';
 import '../styles/ContextDocument.css';
+import CONFIG from '../../.config'; // Import the configuration
 
 const ContextDocument = () => {
   const [document, setDocument] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-  const [qrCodeVisible, setQrCodeVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [useContext, setUseContext] = useState(true);
   const [imageData, setImageData] = useState(null);
 
   useEffect(() => {
-    const checkForImage = setInterval(async () => {
-      try {
-        const response = await axios.get('/api/check-image');
-        if (response.data.imageDataURL) {
-          clearInterval(checkForImage);
-          setImageData(response.data.imageDataURL);
-          Tesseract.recognize(
-            response.data.imageDataURL,
-            'eng',
-            {
-              logger: (m) => console.log(m)
-            }
-          ).then(({ data: { text } }) => {
-            handleTextExtracted(text);
-            setLoading(false);
-          });
-        }
-      } catch (error) {
-        console.error('Error checking for image:', error);
-      }
-    }, 5000);
+    const savedDocument = sessionStorage.getItem('userContext');
+    setDocument(savedDocument || '');
 
-    return () => clearInterval(checkForImage);
+    const useContextPreference = sessionStorage.getItem('useContextDoc');
+    setUseContext(useContextPreference !== 'false');
+
+    const params = new URLSearchParams(window.location.search);
+    const image = params.get('image');
+    if (image) {
+      setImageData(image);
+    }
+
+    const client = new WebSocket(CONFIG.WB_SERVER_IP);
+
+    client.onmessage = (message) => {
+      const data = JSON.parse(message.data);
+      if (data.image) {
+        setImageData(`${CONFIG.SERVER_IP}/public/${data.image}`);
+      }
+    };
+
+    return () => {
+      client.close();
+    };
   }, []);
 
   const handleDocumentChange = (e) => {
-    setDocument(e.target.value);
+    const newDocument = e.target.value;
+    setDocument(newDocument);
+    sessionStorage.setItem('userContext', newDocument);
   };
 
   const handleClear = () => {
     setDocument('');
+    sessionStorage.removeItem('userContext');
     setSnackbarMessage('Notes cleared successfully');
     setSnackbarSeverity('success');
     setSnackbarOpen(true);
@@ -55,46 +57,37 @@ const ContextDocument = () => {
     setSnackbarOpen(false);
   };
 
-  const handleQrCodeToggle = async () => {
-    setQrCodeVisible(!qrCodeVisible);
-    setLoading(true);
-
-    try {
-      await axios.get('/api/start-upload');
-    } catch (error) {
-      console.error('Error starting upload:', error);
-      setSnackbarMessage('Error starting upload');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      setLoading(false);
-    }
-  };
-
   const handleTextExtracted = (text) => {
-    setDocument(prevDocument => `${prevDocument}\n${text}`);
+    setDocument(prevDocument => {
+      const newDocument = `${prevDocument}\n${text}`;
+      sessionStorage.setItem('userContext', newDocument);
+      return newDocument;
+    });
   };
 
   return (
     <Box className="context-document-container">
       <Typography variant="h4" className="context-document-title">ADD YOUR NOTES</Typography>
       <Box className="context-document-actions">
-        <Button
+        {/* Remove or disable Save button as required */}
+        {/* <Button
           variant="contained"
-          color="primary"
-          onClick={handleQrCodeToggle}
-          className="qr-code-button"
+          color="secondary"
+          startIcon={<SaveIcon />}
+          onClick={handleSave}
+          disabled={true} // Disable instead of removing if needed
         >
-          {qrCodeVisible ? 'Hide QR Code' : 'Show QR Code'}
-        </Button>
+          Save
+        </Button> */}
       </Box>
-      {qrCodeVisible && (
-        <Box className="qr-code-container">
-          <QRCode value="https://convonote.com/upload" size={256} />
-        </Box>
-      )}
-      {loading && (
-        <CircularProgress />
-      )}
+      <Button
+          variant="contained"
+          color="error"
+          onClick={handleClear}
+          className="clear-button"
+        >
+          Clear
+        </Button>
       <TextField
         variant="outlined"
         multiline
@@ -103,16 +96,9 @@ const ContextDocument = () => {
         value={document}
         onChange={handleDocumentChange}
       />
-      <Button
-        variant="contained"
-        color="error"
-        onClick={handleClear}
-        className="clear-button"
-      >
-        Clear
-      </Button>
       <Box className="context-document-clear-button-container">
-        {imageData && <img src={imageData} alt="Captured" className="uploaded-image" />}
+        {imageData && <img src={imageData} alt="Captured" />}
+        <ImageUpload onTextExtracted={handleTextExtracted} />
       </Box>
       <Snackbar
         open={snackbarOpen}
