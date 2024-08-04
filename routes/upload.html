@@ -47,7 +47,7 @@
     const errorMessage = document.getElementById('error-message');
 
     // Access the device camera and stream to the video element
-    navigator.mediaDevices.getUserMedia({ video: true })
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
       .then(stream => {
         video.srcObject = stream;
       })
@@ -84,12 +84,17 @@
     // Send the image back to the ContextDocument page
     sendButton.addEventListener('click', () => {
       const imageDataURL = canvas.toDataURL('image/png');
-      try {
-        window.opener.postMessage({ image: imageDataURL }, '*');
-        window.close();
-      } catch (e) {
-        console.error('Error sending image data:', e);
-        errorMessage.textContent = `Error sending image data: ${e.message}`;
+      if (window.opener) {
+        try {
+          window.opener.postMessage({ image: imageDataURL }, '*');
+          window.close();
+        } catch (e) {
+          console.error('Error sending image data:', e);
+          errorMessage.textContent = `Error sending image data: ${e.message}`;
+          errorMessage.style.display = 'block';
+        }
+      } else {
+        errorMessage.textContent = 'Error: This page must be opened by another window to send data back.';
         errorMessage.style.display = 'block';
       }
     });
