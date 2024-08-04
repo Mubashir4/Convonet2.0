@@ -3,7 +3,7 @@ import { List, ListItem, ListItemText, Divider, Box, Typography, IconButton, Dra
 import MenuIcon from '@mui/icons-material/Menu';
 import '../styles/Sidebar.css';
 
-const Sidebar = ({ doctorName, onOptionSelect, isOpen, toggleSidebar, isAdmin, onLogout }) => {
+const Sidebar = ({ doctorName, onOptionSelect, isOpen, toggleSidebar, isAdmin, onLogout, isRecording, stopRecording, setNavigateTo }) => {
   const [selectedOption, setSelectedOption] = useState(isAdmin ? 'Admin Panel' : 'My Notes');
 
   useEffect(() => {
@@ -21,7 +21,12 @@ const Sidebar = ({ doctorName, onOptionSelect, isOpen, toggleSidebar, isAdmin, o
   }, [isAdmin]);
 
   const handleOptionClick = (option) => {
-    setSelectedOption(option);
+    if (isRecording) {
+      setNavigateTo(option);
+      stopRecording();
+    } else {
+      setSelectedOption(option);
+    }
   };
 
   const adminOptions = isAdmin ? ['Admin Panel'] : [];

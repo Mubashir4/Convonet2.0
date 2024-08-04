@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Button, Typography, TextField, Snackbar, Alert, IconButton } from '@mui/material';
+import { Box, Button, Typography, TextField, Snackbar, Alert, CircularProgress } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -9,15 +9,13 @@ import CONFIG from '../../.config';
 import '../styles/Transcribe.css';
 import { useTranscription } from './TranscriptionContext';
 
-const Transcribe = () => {
+const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, mediaRecorderRef, isLoading }) => {
   const { transcription, setTranscription, transcriptionHistory, setTranscriptionHistory } = useTranscription();
-  const [isRecording, setIsRecording] = useState(false);
   const [counter, setCounter] = useState(0);
   const [intervalTime, setIntervalTime] = useState(30);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-  const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const counterIntervalIdRef = useRef(null);
   const streamRef = useRef(null);
@@ -87,7 +85,9 @@ const Transcribe = () => {
     streamRef.current = null;
 
     if (audioChunksRef.current.length > 0) {
+      setIsLoading(true);
       await sendAudioChunks();
+      setIsLoading(false);
     }
   };
 
@@ -185,7 +185,7 @@ const Transcribe = () => {
 
   const handleIntervalChange = (e) => {
     const newValue = parseInt(e.target.value, 10);
-    if (newValue >= 5) {
+    if (newValue >= 1) {
       setIntervalTime(newValue);
     }
   };
@@ -214,6 +214,13 @@ const Transcribe = () => {
         </Button>
       </Box>
 
+      {isLoading && (
+        <Box className="loading-spinner">
+          <CircularProgress />
+          <Typography variant="h6" sx={{ marginTop: '10px' }}>Please wait...</Typography>
+        </Box>
+      )}
+
       <Button
         variant="contained"
         color="secondary"
@@ -223,15 +230,15 @@ const Transcribe = () => {
         Clear
       </Button>
       <Box sx={{ position: 'relative', flexGrow: 1, width: '100%' }}>
-            <TextField
-        inputRef={textareaRef}
-        className="transcribe-textarea"
-        variant="outlined"
-        multiline
-        value={transcription}
-        onChange={handleTranscriptionChange}
-        sx={{ width: '90%', height: '450px', resize: 'none', overflow: 'auto' }}
-      />
+        <TextField
+          inputRef={textareaRef}
+          className="transcribe-textarea"
+          variant="outlined"
+          multiline
+          value={transcription}
+          onChange={handleTranscriptionChange}
+          sx={{ width: '90%', height: '450px', resize: 'none', overflow: 'auto' }}
+        />
         <Button
           variant="contained"
           color="primary"
@@ -242,8 +249,6 @@ const Transcribe = () => {
           Copy
         </Button>
       </Box>
-
-
 
       <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '10px', backgroundColor: 'white' }}>
         <Typography variant="body1" sx={{ marginRight: '10px' }}>Interval Time (sec):</Typography>
@@ -262,11 +267,10 @@ const Transcribe = () => {
         variant="contained"
         color="secondary"
         onClick={stopRecording}
-        sx={{ position: 'relative',marginTop:'10px', bottom: 10, width: '20%', backgroundColor: 'red', color: 'white' }}
+        sx={{ position: 'relative', marginTop: '10px', bottom: 10, width: '20%', backgroundColor: 'red', color: 'white' }}
       >
         Stop Recording
       </Button>
-      
 
       <Snackbar open={snackbarOpen} autoHideDuration={2000} onClose={handleSnackbarClose}>
         <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
