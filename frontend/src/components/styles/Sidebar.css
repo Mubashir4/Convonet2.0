@@ -1,39 +1,127 @@
 .sidebar-container {
-  position: absolute;
-  transition: all 0.3s ease-in-out;
+  width: 250px;
+  transition: width 0.3s ease-in-out;
   background-color: #171717;
+  color: white;
+  height: 100%;
+}
+
+.sidebar-content {
+  padding: 10px;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: fadeInEnhanced 1.5s ease-in-out; /* Apply enhanced fade-in animation */
 }
 
 .sidebar {
   width: 250px;
   background-color: #171717 !important; /* Ensure color is enforced */
   transition: transform 0.3s ease-in-out;
+  position: fixed; /* Make sidebar fixed to prevent overlap */
+  left: 0;
+  top: 0;
+  height: 100vh;
 }
 
 .sidebar.closed {
-  transform: translateX(-250px);
+  transform: translateX(-250px); /* Move sidebar out of view */
 }
 
 .menu-button {
+  display: block;
+  margin: 0 auto;
+  color: rgb(105, 47, 207);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+/* Enhanced Fade-In Animation and Button Adjustments */
+
+/* Animation for Menu Items */
+.animated-menu .MuiListItem-root {
+  animation: slideIn 0.5s ease forwards;
+  opacity: 0;
+}
+
+.animated-menu .MuiListItem-root:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.animated-menu .MuiListItem-root:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.animated-menu .MuiListItem-root:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Keyframes for Animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInEnhanced {
+  0% {
+    opacity: 0;
+    transform: scale(0.95); /* Slightly smaller to add a zoom effect */
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.02); /* Slightly larger for a bounce effect */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1); /* Normal size */
+  }
+}
+
+/* Style for Round 'Make Notes' Button */
+.make-notes-button {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: grey;
+  width: 120px; /* Adjusted width */
+  height: 120px; /* Adjusted height */
+  background-color: #e40a1c;
+  color: #dcd3d4;
+  border-radius: 50%;
+  margin: 20px auto; /* Moved up */
+  font-weight: bold; /* Bold text */
+  font-size: 1.1rem; /* Slightly larger font */
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; /* Animation for hover */
+  text-align: center;
 }
 
-.sidebar-content {
-  margin-top: 10px;
-  text-align: center; /* Center the content */
+.make-notes-button:hover {
+  background-color: white; /* Change background to white */
+  color: black; /* Text color changes to black */
 }
 
-/* Add this to your Sidebar.css */
-.make-notes {
-  background-color: #e40a1c; /* Light red background */
-  color: #dcd3d4; /* Dark red text */
+/* Enhanced Styles for Menu Items */
+.MuiListItem-root {
+  margin-bottom: 10px;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+  transition: transform 0.9s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.make-notes:hover {
-  background-color: #f5c6cb; /* Slightly darker red on hover */
+.MuiListItem-root:hover,
+.MuiListItem-root.selected {
+  background-color: #0a98e4; /* Highlight color */
+  color: white;
+  transform: translateX(5px); /* Slide effect on hover */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Shadow effect on hover */
+  cursor: pointer;
 }
 
 .selected-red {
@@ -41,26 +129,17 @@
   font-weight: bold;
 }
 
-.MuiListItem-root {
-  margin-bottom: 10px;
-  border-radius: 4px;
-  color: white;
-  font-weight: bold;
-}
-
-.MuiListItem-root:hover,
-.MuiListItem-root.selected {
-  background-color: #575c6b;
-  cursor: pointer;
-}
-
-
 .drawer-toggle-button {
   position: absolute;
   top: 10px;
   left: 10px;
   z-index: 1000;
   color: grey;
-  background-color: #1a1919; /* Ensure matching color for toggle button */
+  background-color: #171717; /* Ensure matching color for toggle button */
   border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.drawer-toggle-button:hover {
+  background-color: #575c6b;
 }

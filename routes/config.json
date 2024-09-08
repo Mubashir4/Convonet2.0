@@ -2,6 +2,6 @@
   "n": "1",
   "temperature": "0.2",
   "audio_model": "0",
-  "ec2_ip": "0.0.0.0",
+  "ec2_ip": "54.208.89.50",
   "diagnosis_model": "0"
 }

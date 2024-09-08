@@ -60,6 +60,29 @@ router.get('/', async (req, res) => {
       res.status(500).json({ msg: 'Server error' });
     }
   });
+
+// New GET route to fetch only file names and active status
+router.get('/active-docs', async (req, res) => {
+  try {
+    const contextDocs = await ContextDoc.find({ active: true }); // Fetch only active documents
+    res.status(200).json(contextDocs);
+  } catch (error) {
+    console.error('Error fetching active documents:', error);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+// New GET route to fetch only file names and active status
+router.get('/all-docs', async (req, res) => {
+  try {
+    const contextDocs = await ContextDoc.find({}); // Fetch only active documents
+    res.status(200).json(contextDocs);
+  } catch (error) {
+    console.error('Error fetching active documents:', error);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
   
 
 router.patch('/:id', async (req, res) => {

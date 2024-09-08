@@ -208,7 +208,7 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
           color="primary"
           startIcon={isRecording ? <StopIcon style={{ color: 'red' }} /> : <MicIcon />}
           onClick={isRecording ? stopRecording : startRecording}
-          sx={{ marginRight: '10px' }}
+          className="start-stop-button"
         >
           {isRecording ? 'Stop Recording' : 'Start Recording'}
         </Button>
@@ -225,11 +225,11 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
         variant="contained"
         color="secondary"
         onClick={handleClearTranscription}
-        sx={{ margin: '0 auto', backgroundColor: 'red', color: 'white' }}
+        className="clear-button"
       >
         Clear
       </Button>
-      <Box sx={{ position: 'relative', flexGrow: 1, width: '100%' }}>
+      <Box sx={{ position: 'relative', width: '100%' }}>
         <TextField
           inputRef={textareaRef}
           className="transcribe-textarea"
@@ -237,18 +237,19 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
           multiline
           value={transcription}
           onChange={handleTranscriptionChange}
-          sx={{ width: '90%', height: '450px', resize: 'none', overflow: 'auto' }}
+          sx={{ width: '100%', height: '450px', resize: 'none', overflow: 'auto', paddingRight: '50px' }} 
         />
         <Button
           variant="contained"
           color="primary"
           startIcon={<ContentCopyIcon />}
           onClick={handleCopyTranscription}
-          sx={{ position: 'absolute', top: 10, right: 10 }}
+          className="copy-button"
         >
           Copy
         </Button>
       </Box>
+
 
       <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '10px', backgroundColor: 'white' }}>
         <Typography variant="body1" sx={{ marginRight: '10px' }}>Interval Time (sec):</Typography>
@@ -267,7 +268,7 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
         variant="contained"
         color="secondary"
         onClick={stopRecording}
-        sx={{ position: 'relative', marginTop: '10px', bottom: 10, width: '20%', backgroundColor: 'red', color: 'white' }}
+        className="stop-recording-button"
       >
         Stop Recording
       </Button>

@@ -35,55 +35,54 @@ const UsersComponent = ({ users, setUsers, setSnackbarMessage, setSnackbarSeveri
 
   return (
     <Box>
-        <Typography variant="h6" sx={{ color: 'black' }}>Registered Users</Typography>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead sx={{ backgroundColor: 'black' }}>
-              <TableRow>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Name</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Email</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Role</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Status</TableCell>
-                <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
+      <Typography variant="h2" sx={{ color: '#333', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '20px' }}>Registered Users</Typography>
+
+      <TableContainer component={Paper} className="admin-panel-table">
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Role</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow
+                key={user._id}
+                className={user.user_active ? 'active-user-row' : 'inactive-user-row'}
+              >
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <select
+                    value={user.role}
+                    onChange={(e) => handleUpdateUser(user._id, { role: e.target.value === 'doctor' ? 'user' : e.target.value })}
+                  >
+                    <option value="doctor">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </TableCell>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    checked={user.user_active}
+                    onChange={(e) => handleUpdateUser(user._id, { user_active: e.target.checked })}
+                  />
+                </TableCell>
+                <TableCell>
+                  <IconButton onClick={() => handleDeleteUser(user._id)} color="error">
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow
-                  key={user._id}
-                  sx={{ backgroundColor: user.user_active ? '#d4edda' : '#f8d7da' }}
-                >
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleUpdateUser(user._id, { role: e.target.value === 'doctor' ? 'user' : e.target.value })}
-                      style={{ color: 'black', backgroundColor: 'white', borderColor: 'black' }}
-                    >
-                      <option value="doctor">User</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </TableCell>
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={user.user_active}
-                      onChange={(e) => handleUpdateUser(user._id, { user_active: e.target.checked })}
-                      style={{ color: 'black' }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleDeleteUser(user._id)} color="error">
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 };
 

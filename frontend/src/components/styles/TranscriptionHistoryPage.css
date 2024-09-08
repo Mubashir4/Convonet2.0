@@ -1,119 +1,121 @@
+/* Main container styling */
 .history-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 5px;
-  width: 100%;
-  height: 100vh;
-  box-sizing: border-box;
-  background-color: #309ec9db;
-  overflow: auto;
-}
-
-.history-title {
-  font-weight: bold;
-  color: white;
-  margin-bottom: 20px;
-  align-self: flex-start;
+  padding: 20px;
+  margin: auto;
+  max-width: 96%; /* Limit max width for better readability */
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: scroll;
 }
 
 .history-list {
   flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
+  font-weight: bold;
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 20px;
   max-height: calc(100vh - 80px);
   overflow-y: auto;
 }
 
-.history-item {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-  background-color: #309ec9db;
-  padding: 10px;
-  border-radius: 8px;
+/* Title Styling */
+.history-title {
+  font-weight: bold;
+  font-size: 1.5rem; /* Slightly smaller font size */
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
-.timestamp {
-  color: white;
-  margin-bottom: 5px;
-}
-
-.transcription-box {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 5px;
-  background-color: transparent;
-  color: white;
-  border: 1px solid white;
-  position: relative;
-}
-
-.response-box {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 5px;
-  background-color: black;
-  color: white;
-  position: relative;
-}
-
-.transcription-box .MuiTypography-root,
-.response-box .MuiTypography-root {
-  flex-grow: 1;
-  word-wrap: break-word;
-}
-
-.copy-icon {
-  color: white;
-  border: 1px solid white;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-
-.collapsed {
-  display: -webkit-box;
-  -webkit-line-clamp: 3; /* For transcription */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.collapsed-description {
-  display: -webkit-box;
-  -webkit-line-clamp: 6; /* For description */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.show-more {
-  color: blue;
-  cursor: pointer;
-  margin-top: 5px; /* Ensure it appears at the bottom of the text area */
-}
-
-.show-more:hover {
-  text-decoration: underline;
-}
-
-/* Add this CSS for the green message box */
+/* Loading and copied message styles */
 .copied-message {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-  padding: 10px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  display: none;
+  text-align: center;
+  background-color: #007bff;
+  color: white;
+  padding: 8px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  display: none; /* Initially hidden */
+  animation: fadeIn 0.5s ease;
 }
 
 .copied-message.show {
-  display: block;
+  display: block; /* Show when active */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* History List */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* History Item Box */
+.history-item {
+  background-color: #1e1f1f;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(49, 4, 4, 0.05);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.875rem; /* Smaller font size for general content */
+}
+
+/* Timestamp */
+.timestamp {
+  font-size: 0.75rem; /* Smaller font size for less important text */
+  color: #666;
+}
+
+/* Transcription and Response Boxes */
+.transcription-box, .response-box {
+  position: relative;
+  padding: 10px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(16, 1, 1, 0.793);
+  font-size: 0.875rem; /* Consistent smaller font size */
+}
+
+/* Collapsed Text */
+.collapsed1, .collapsed-description1 {
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: normal;
+  max-height: 4.5em; /* Adjust max height for approximately 3 lines of text */
+  font-size: 0.875rem; /* Smaller font size */
+}
+
+/* Show More/Less Button */
+.show-more {
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.75rem; /* Smaller font size for utility text */
+  text-align: right;
+  margin-top: 5px;
+}
+
+/* Icon Button for Copy */
+.MuiIconButton-root {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #007bff;
+  background-color: white;
+  border-radius: 50%;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  font-size: 0.75rem; /* Smaller font size for icons */
+}
+
+.MuiIconButton-root:hover {
+  background-color: #000000;
+  transform: scale(1.1);
 }

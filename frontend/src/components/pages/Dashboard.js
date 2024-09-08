@@ -45,6 +45,20 @@ const Dashboard = () => {
     }
   }, [isLoading, navigateTo]);
 
+  useEffect(() => {
+  const dashboardContainer = document.querySelector('.dashboard-container');
+  if (dashboardContainer) {
+    if (isSidebarOpen) {
+      dashboardContainer.classList.add('expanded');
+      dashboardContainer.classList.remove('collapsed');
+    } else {
+      dashboardContainer.classList.remove('expanded');
+      dashboardContainer.classList.add('collapsed');
+    }
+  }
+}, [isSidebarOpen]);
+
+
   const handleLogout = () => {
     sessionStorage.clear();
     navigate('/');
@@ -89,47 +103,68 @@ const Dashboard = () => {
   };
 
   return (
-    <Box className="dashboard-container" sx={{ display: 'flex', height: '100vh', flexDirection: 'column' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', padding: '5px' }}>
+    <Box className="dashboard-container" sx={{ display: 'flex', height: '100vh' }}>
         {!isSidebarOpen && (
           <IconButton
-            onClick={toggleSidebar}
+          onClick={toggleSidebar}
+          sx={{
+            color: 'grey',
+            backgroundColor: '#1a1919',
+            borderRadius: '4px',
+            marginRight: '10px',
+            color:'white'
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+        )}
+
+  
+      {/* Sidebar Component */}
+      <Sidebar
+        doctorName={doctorName}
+        onOptionSelect={handleOptionSelect}
+        isOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        isAdmin={userRole === 'admin'}
+        onLogout={handleLogout}
+        isRecording={isRecording}
+        stopRecording={stopRecording}
+        setNavigateTo={setNavigateTo}
+      />
+  
+      {/* Main Content Area */}
+      <Box
+        sx={{
+          flexGrow: 1,
+          padding: '20px',
+          transition: 'margin-left 0.3s ease-in-out',
+          marginLeft: isSidebarOpen ? '250px' : '0',
+          backgroundColor: '#171717'
+        }}
+      >
+        {isLoading ? (
+          <Box
+            className="loading-spinner"
             sx={{
-              color: 'grey',
-              backgroundColor: '#1a1919',
-              borderRadius: '4px',
-              marginRight: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%'
             }}
           >
-            <MenuIcon />
-          </IconButton>
+            <CircularProgress />
+            <Typography variant="h6" sx={{ marginTop: '10px' }}>
+              Please wait...
+            </Typography>
+          </Box>
+        ) : (
+          renderContent()
         )}
-      </Box>
-      <Box sx={{ display: 'flex', flexGrow: 1, backgroundColor: '#171717' }}>
-        <Sidebar
-          doctorName={doctorName}
-          onOptionSelect={handleOptionSelect}
-          isOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
-          isAdmin={userRole === 'admin'}
-          onLogout={handleLogout}
-          isRecording={isRecording}
-          stopRecording={stopRecording}
-          setNavigateTo={setNavigateTo}
-        />
-        <Box sx={{ flexGrow: 1, padding: '20px', transition: 'margin-left 0.3s ease-in-out', marginLeft: isSidebarOpen ? '150px' : '0', backgroundColor: '#171717' }}>
-          {isLoading ? (
-            <Box className="loading-spinner" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-              <CircularProgress />
-              <Typography variant="h6" sx={{ marginTop: '10px' }}>Please wait...</Typography>
-            </Box>
-          ) : (
-            renderContent()
-          )}
-        </Box>
       </Box>
     </Box>
   );
+  
 };
 
 export default Dashboard;

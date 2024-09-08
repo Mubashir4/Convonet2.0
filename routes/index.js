@@ -247,27 +247,56 @@ router.get('/prompts', async (req, res) => {
   }
 });
 
-// Create or update prompts
-router.post('/prompts', async (req, res) => {
-  const { prompts } = req.body;
+// Get all agents with filtering based on current prompt order
+router.get('/agents', async (req, res) => {
   try {
-    // Clear existing prompts
-    await Prompt.deleteMany({});
-    
-    // Convert _id to ObjectId if necessary
-    const formattedPrompts = prompts.map(prompt => ({
-      ...prompt,
-      _id: ObjectId.isValid(prompt._id) ? prompt._id : new ObjectId(),
+    // Fetch all prompts from the database
+    const prompts = await Prompt.find().sort({ created_at: 1 });
+
+    // Transform prompts into an array of agent objects
+    const agents = prompts.map(prompt => ({
+      _id: prompt._id,
+      agentName: prompt.agentName,
     }));
 
-    // Save new prompts
-    const createdPrompts = await Prompt.insertMany(formattedPrompts);
-    res.status(201).json(createdPrompts);
+    res.json(agents); // Send the array of agents
   } catch (error) {
-    console.error('Error saving prompts:', error.message);
+    console.error('Error fetching agents:', error);
     res.status(500).json({ msg: 'Server error' });
   }
 });
+
+
+// Create or update prompts
+router.post('/prompts', async (req, res) => {
+  const { agentName, prompt, modelType, contextDocs, connectedAgents, transcript, userName } = req.body;
+
+  try {
+    let existingPrompt = await Prompt.findOne({ agentName });
+
+    if (existingPrompt) {
+      existingPrompt.prompt = prompt;
+      existingPrompt.modelType = modelType;
+      existingPrompt.contextDocs = contextDocs;
+      existingPrompt.connectedAgents = connectedAgents;
+      existingPrompt.transcript = transcript;
+      existingPrompt.userName = userName; 
+
+      await existingPrompt.save();
+      res.status(200).json(existingPrompt);
+    } else {
+      const newPrompt = new Prompt({ agentName, prompt, modelType, contextDocs, connectedAgents, transcript, userName });
+      await newPrompt.save();
+      res.status(201).json(newPrompt);
+    }
+  } catch (error) {
+    console.error('Error saving prompt:', error.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+
+
 
 // Delete a prompt
 router.delete('/prompts/:id', async (req, res) => {

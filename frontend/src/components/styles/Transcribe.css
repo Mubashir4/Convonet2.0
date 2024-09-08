@@ -7,6 +7,7 @@
   height: 100vh;
   box-sizing: border-box;
   background-color: rgb(255, 254, 253);
+  overflow: auto;
 }
 
 .transcribe-title {
@@ -23,17 +24,18 @@
 
 .transcribe-actions .MuiButton-root {
   margin-right: 10px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.transcribe-actions .MuiButton-root:last-child {
-  margin-right: 0;
-  margin-left: 10px;
+.transcribe-actions .MuiButton-root:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+  transform: scale(1.05);
 }
 
 .transcribe-textarea {
   width: 97%;
   flex-grow: 1;
-  background-color: rgb(255, 255, 255);
+  background-color: #ffffff;
   padding: 16px;
   border: 2px solid #073642;
   border-radius: 8px;
@@ -42,24 +44,30 @@
   font-family: 'Courier New', Courier, monospace;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
+  margin-bottom: 20px;
+  transition: border-color 0.3s ease;
+}
+
+.transcribe-textarea:focus {
+  border-color: #007bff; /* Highlight border color on focus */
 }
 
 .history-title {
   font-weight: bold;
   margin-bottom: 20px;
+  color: #333;
 }
 
 .history-textarea {
   width: 100%;
   flex-grow: 1;
-  background-color: rgb(192, 192, 192);
+  background-color: #eaeaea;
   padding: 16px;
   border: 2px solid #073642;
   border-radius: 8px;
   resize: none;
   line-height: 1.5;
   font-family: 'Courier New', Courier, monospace;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
 }
 
@@ -74,3 +82,48 @@
   transform: translateX(-50%);
 }
 
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.clear-button {
+  background-color: red !important;
+  color: white !important;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.clear-button:hover {
+  background-color: darkred !important;
+  transform: scale(1.05);
+}
+
+.copy-button {
+  position: absolute;
+  top: 10px; /* Position it at the top inside the text area */
+  right: 10px; /* Align it to the right */
+  background-color: #007bff !important;
+  color: white !important;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  z-index: 10; /* Ensure it stays above the text area */
+  padding: 4px 8px; /* Adjust padding for a compact look */
+  font-size: 0.875rem; /* Smaller font size for better fit */
+}
+
+.copy-button:hover {
+  background-color: #0056b3 !important;
+  transform: scale(1.05);
+}
+
+.stop-recording-button {
+  background-color: red !important;
+  color: white !important;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.stop-recording-button:hover {
+  background-color: darkred !important;
+  transform: scale(1.05);
+}

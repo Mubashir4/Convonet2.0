@@ -5,6 +5,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { decryptData } from '../utils/encryption';
 import '../styles/TranscriptionHistoryPage.css';
 import CONFIG from '../../.config';
+import ReactMarkdown from 'react-markdown';
+
 
 const TranscriptionHistoryPage = () => {
   const [history, setHistory] = useState([]);
@@ -76,13 +78,12 @@ const TranscriptionHistoryPage = () => {
                 </Typography>
               )}
               <Box className="transcription-box">
-                <Typography
-                  variant="body1"
-                  className={expandedTranscription[index] ? '' : 'collapsed'}
-                  sx={{ paddingRight: '40px' }} // Add padding to avoid overlap with the copy icon
-                >
-                  {entry.transcription}
-                </Typography>
+              <Box
+    className={expandedTranscription[index] ? 'expanded' : 'collapsed1'} // Use CSS classes to control display
+    sx={{  maxHeight: expandedTranscription[index] ? 'none' : '4.5em', overflow: 'hidden' }} // Set maxHeight for truncation
+  >
+                  <ReactMarkdown>{entry.transcription}</ReactMarkdown>
+                </Box>
                 <IconButton
                   onClick={() => handleCopyToClipboard(entry.transcription)}
                   sx={{ position: 'absolute', top: 0, right: 5, color: 'white' }}
@@ -102,10 +103,10 @@ const TranscriptionHistoryPage = () => {
               <Box className="response-box">
                 <Typography
                   variant="body1"
-                  className={expandedDiagnosis[index] ? '' : 'collapsed-description'}
+                  className={expandedDiagnosis[index] ? '' : 'collapsed-description1'}
                   sx={{ paddingRight: '40px' }}
                 >
-                  {entry.diagnosisText}
+                  <ReactMarkdown>{entry.diagnosisText}</ReactMarkdown>
                 </Typography>
                 <IconButton
                   onClick={() => handleCopyToClipboard(entry.diagnosisText)}

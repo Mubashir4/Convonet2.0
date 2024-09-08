@@ -68,29 +68,19 @@ const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000, 
   let attempt = 0;
   let generatedOutput = '';
 
-  // Determine model type logic
-  const isOpenAIModel = modelType === 'gpt-4o' || modelType === 'gpt-4o-mini';
-  const isGeminiModel = modelType === 'gemini-1.5-flash' || modelType === 'gemini-1.5-pro';
-  const finalModelType = isOpenAIModel ? modelType : isGeminiModel ? modelType : 'gpt-4o-mini';
-
   while (attempt < retries) {
     try {
       let result;
-      if (isGeminiModel) {
-        console.log('Using Gemini model:', finalModelType);
+      if (modelType === 'Gemini') {
+        console.log('Using Gemini model');
         result = await geminiModel.generateContent({
           contents: [{ role: 'user', parts: promptConfig }],
         });
         const response = await result.response;
         generatedOutput += response.text();
       } else {
-        console.log('Using OpenAI GPT model:', finalModelType);
-        result = await callOpenAIAPI(
-          [{ role: 'user', content: promptConfig[0].text }],
-          null,
-          parseFloat(config.temperature) || 0.2,
-          ''
-        );
+        console.log('Using GPT model');
+        result = await callOpenAIAPI([{ role: 'user', content: promptConfig[0].text }], null, parseFloat(config.temperature) || 0.2, '');
         generatedOutput += result;
       }
       return generatedOutput;
@@ -101,11 +91,10 @@ const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000, 
         return generatedOutput;
       }
       const delay = initialDelay * Math.pow(2, attempt);
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 };
-
 
 const diagnosticUnified = async (req, res) => {
   const { email, transcription, userContext, useContextDoc } = req.body;
@@ -115,7 +104,7 @@ const diagnosticUnified = async (req, res) => {
   }
 
   const config = readConfig();
-  const initialModelType = config.diagnosis_model === '0' ? 'gpt-4o-mini' : 'gemini-1.5-flash';
+  const initialModelType = config.diagnosis_model === '0' ? 'GPT' : 'Gemini';
 
   try {
     let contextDocText = '';
@@ -141,25 +130,12 @@ const diagnosticUnified = async (req, res) => {
     });
     await newEntry.save();
 
-    console.log(email.trim());
-    const prompts = await Prompt.find({userName: email.trim()});
-    console.log(prompts);
+    const prompts = await Prompt.find();
     const diagnosisResponses = [initialDiagnosisText];
 
     for (const promptObj of prompts) {
-      // Include context documents, agent responses, and transcription if specified
-      let agentResponses = '';
-      if (promptObj.connectedAgents && promptObj.connectedAgents.length > 0) {
-        const agentNames = promptObj.connectedAgents.join(', ');
-        agentResponses = `Agent responses: ${agentNames}`;
-      }
-
-      let transcriptText = promptObj.transcript ? `\nTranscript: ${transcription}` : '';
-
       const newPromptConfig = [
-        {
-          text: `Having context:\n'${extendedContextText}'${transcriptText}\n${agentResponses}\nand original response ${initialDiagnosisText}\nApply prompt:\n${promptObj.prompt}\nElaborate each part further`,
-        },
+        { text: `Having context:\n'${extendedContextText}'\n and original response ${initialDiagnosisText}\nApply prompt:\n${promptObj.text}\nElaborate each part further` },
       ];
 
       const diagnosisText = await generateResponse(newPromptConfig, 3, 1000, promptObj.modelType);

@@ -20,50 +20,80 @@ html, body {
   color: white;
 }
 
-.admin-panel-row {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  margin: 20px 0;
-}
-
-.admin-panel-row input,
-.admin-panel-row button {
-  background-color: #1a1a1a;
-  color: white;
-  border: 1px solid #555;
-  padding: 10px;
-  margin: 5px;
-  border-radius: 5px;
-}
-
-.admin-panel-row button:hover {
-  background-color: #333;
-}
-
+/* Styles for Users Table */
 .admin-panel-table {
   width: 90%;
   margin: 20px auto;
-  background-color: white;
-  color: black;
   border-collapse: collapse;
+  background-color: #ffffff;
+  color: #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.admin-panel-table th,
-.admin-panel-table td {
-  border: 1px solid #ddd;
-  padding: 4px 8px; /* Reduced padding for compactness */
-}
-
+/* Table Header Styling */
 .admin-panel-table th {
-  background-color: #f2f2f2;
+  background-color: #4a90e2; /* Professional blue color */
+  color: white;
   text-align: left;
-  font-size: 14px; /* Reduced font size */
+  font-size: 14px;
+  padding: 12px 15px;
+  border-bottom: 2px solid #f0f0f0;
+  position: sticky; /* Sticky header for scrolling */
+  top: 0;
+  z-index: 1;
 }
 
+/* Table Row Styling */
 .admin-panel-table td {
-  font-size: 13px; /* Reduced font size */
+  font-size: 13px;
+  padding: 10px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* Hover Effect for Rows */
+.admin-panel-table tr:hover {
+  background-color: #f0f4f8; /* Light hover effect */
+  color: #333;
+  cursor: pointer;
+}
+
+/* Active/Inactive User Row Colors */
+.active-user-row {
+  background-color: #d4edda; /* Light green for active users */
+}
+
+.inactive-user-row {
+  background-color: #f8d7da; /* Light red for inactive users */
+}
+
+/* Enhanced Button Styles */
+.admin-panel-table .MuiIconButton-root {
+  color: #f44336; /* Red color for delete icon */
+  transition: transform 0.2s ease;
+}
+
+.admin-panel-table .MuiIconButton-root:hover {
+  transform: scale(1.2); /* Slight grow on hover */
+  color: #c62828;
+}
+
+/* Select and Checkbox Styles */
+.admin-panel-table select,
+.admin-panel-table input[type="checkbox"] {
+  border: 1px solid #ccc;
+  padding: 5px;
+  border-radius: 4px;
+  transition: border-color 0.3s ease;
+}
+
+.admin-panel-table select:focus,
+.admin-panel-table input[type="checkbox"]:focus {
+  border-color: #4a90e2;
+}
+
 
 .context-document-section {
   display: flex;
@@ -107,27 +137,54 @@ html, body {
 /* Styles for custom prompts section */
 .custom-prompts-container {
   margin-bottom: 20px;
-}
-
-.custom-prompts-container button {
-  margin-bottom: 10px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .custom-prompt-row {
   display: flex;
-  align-items: center;
+  flex-direction: column; /* Stack elements vertically */
+  align-items: stretch; /* Full-width items */
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 20px; /* Larger spacing */
 }
 
-.custom-prompt-row input {
-  flex: 1;
-  padding: 4px 8px;
+.custom-prompt-row input,
+.custom-prompt-row .MuiFormControl-root {
+  width: 100%;
+  min-width: 150px;
 }
 
 .custom-prompt-row button {
-  padding: 4px 8px;
+  align-self: flex-end; /* Align buttons to the right */
+  padding: 6px 12px;
+  background-color: #e57373;
+  border-radius: 4px;
+  color: white;
 }
+
+.custom-prompt-row button:hover {
+  background-color: #ef5350;
+}
+
+.MuiListItem-root {
+  padding-left: 0; /* Align checkboxes closer to the text */
+}
+
+.collapse-container {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.collapse-container .MuiButton-root {
+  margin-top: 10px;
+  align-self: flex-end;
+}
+
+
 
 .config-container {
   display: flex;
@@ -181,4 +238,83 @@ html, body {
   }
 }
 
+/* Styles for Context Documents Table */
+.context-docs-table {
+  width: 90%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  color: #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
 
+/* Table Header Styling */
+.context-docs-table th {
+  background-color: #4a90e2; /* Professional blue color */
+  color: white;
+  text-align: left;
+  font-size: 14px;
+  padding: 12px 15px;
+  border-bottom: 2px solid #f0f0f0;
+  position: sticky; /* Sticky header for scrolling */
+  top: 0;
+  z-index: 1;
+}
+
+/* Table Row Styling */
+.context-docs-table td {
+  font-size: 13px;
+  padding: 10px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Hover Effect for Rows */
+.context-docs-table tr:hover {
+  background-color: #f0f4f8; /* Light hover effect */
+  color: #333;
+  cursor: pointer;
+}
+
+/* Active/Inactive Document Row Colors */
+.active-doc-row {
+  background-color: #d4edda; /* Light green for active documents */
+}
+
+.inactive-doc-row {
+  background-color: #f8d7da; /* Light red for inactive documents */
+}
+
+/* Enhanced Button Styles */
+.context-docs-table .MuiIconButton-root {
+  color: #f44336; /* Red color for delete icon */
+  transition: transform 0.2s ease;
+}
+
+.context-docs-table .MuiIconButton-root:hover {
+  transform: scale(1.2); /* Slight grow on hover */
+  color: #c62828;
+}
+
+/* Input and Upload Button Styles */
+.context-docs-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.context-docs-upload input[type="file"] {
+  display: block; /* Hidden file input */
+}
+
+.context-docs-upload-button {
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.context-docs-upload-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}

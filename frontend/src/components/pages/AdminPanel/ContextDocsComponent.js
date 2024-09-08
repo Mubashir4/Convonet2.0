@@ -3,7 +3,9 @@ import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead
 import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import CONFIG from '../../../.config.js';
-import { decryptData } from '../../utils/encryption'; // Adjust the import path as needed
+import { decryptData } from '../../utils/encryption';
+import '../../ContextDocsComponent.css';
+
 
 const ContextDocsComponent = ({ contextDocs = [], setContextDocs, setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen }) => {
   const [files, setFiles] = useState([]);
@@ -93,29 +95,31 @@ const ContextDocsComponent = ({ contextDocs = [], setContextDocs, setSnackbarMes
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ color: 'black' }}>Context Documents</Typography>
-      <Input type="file" multiple onChange={handleFileChange} />
-      <Button variant="contained" color="primary" onClick={handleFileUpload}>Upload Files</Button>
-      <TableContainer component={Paper}>
+      <Typography variant="h2" className="context-docs-header">Context Documents</Typography>
+      <Box className="context-docs-upload">
+        <Input type="file" multiple onChange={handleFileChange} />
+        <Button variant="contained" color="primary" onClick={handleFileUpload} className="context-docs-upload-button">Upload Files</Button>
+      </Box>
+      <TableContainer component={Paper} className="context-docs-table">
         <Table>
-          <TableHead sx={{ backgroundColor: 'black' }}>
+          <TableHead>
             <TableRow>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Name</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Time of Upload</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Active Status</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Time of Upload</TableCell>
+              <TableCell>Active Status</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {Array.isArray(contextDocs) && contextDocs.map((doc) => (
-              <TableRow key={doc._id} sx={{ backgroundColor: doc.active ? '#d4edda' : '#f8d7da' }}>
+              <TableRow key={doc._id} className={doc.active ? 'active-doc-row' : 'inactive-doc-row'}>
                 <TableCell>{doc.name}</TableCell>
                 <TableCell>{new Date(doc.updated_at).toLocaleString()}</TableCell>
                 <TableCell>
-                  <input type="checkbox" checked={doc.active} onChange={(e) => handleUpdateContextDoc(doc._id, { active: e.target.checked })} style={{ color: 'black' }} />
+                  <input type="checkbox" checked={doc.active} onChange={(e) => handleUpdateContextDoc(doc._id, { active: e.target.checked })} />
                 </TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleDeleteContextDoc(doc._id)} color="error">
+                  <IconButton onClick={() => handleDeleteContextDoc(doc._id)} className="context-docs-delete-button">
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>

@@ -57,6 +57,7 @@ const MakeNotes = () => {
     setBackdropOpen(true);
     const encryptedUser = sessionStorage.getItem('user');
     const user = encryptedUser ? decryptData(encryptedUser) : null;
+    const username = user.name
     const email = user ? user.email : '';
     if (!email) {
       console.error('User email is not available');
@@ -73,7 +74,6 @@ const MakeNotes = () => {
 
     const encryptedUserContext = sessionStorage.getItem('userContext');
     const userContext = encryptedUserContext ? decryptData(encryptedUserContext) : '';
-
     try {
       const response = await axios.post(`${CONFIG.SERVER_IP}/api/diagnose`, {
         email,
@@ -81,7 +81,7 @@ const MakeNotes = () => {
         transcription: text,
         useContextDoc
       });
-
+      
       const encryptedResponses = response.data.responses.map(resp => encryptData(resp));
       const newResponse = response.data.responses[0];
       const newText = `${text}\n${newResponse}`;

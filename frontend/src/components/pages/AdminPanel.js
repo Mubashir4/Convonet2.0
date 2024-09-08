@@ -5,8 +5,7 @@ import ContextDocsComponent from './AdminPanel/ContextDocsComponent';
 import ConfigComponent from './AdminPanel/ConfigComponent';
 import CustomPromptsComponent from './AdminPanel/CustomPromptsComponent';
 import UsersComponent from './AdminPanel/UsersComponent';
-import KeysComponent from './AdminPanel/KeysComponent'; // Import the new Keys component
-import { decryptData } from '../utils/encryption';
+import KeysComponent from './AdminPanel/KeysComponent';
 import CONFIG from '../../.config';
 import '../styles/AdminPanel.css';
 

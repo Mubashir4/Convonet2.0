@@ -1,0 +1,81 @@
+/* Styles for Context Documents Table */
+.context-docs-table {
+    width: 90%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    color: #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  /* Table Header Styling */
+  .context-docs-table th {
+    background-color: #4a90e2; /* Professional blue color */
+    color: white;
+    text-align: left;
+    font-size: 14px;
+    padding: 12px 15px;
+    border-bottom: 2px solid #f0f0f0;
+    position: sticky; /* Sticky header for scrolling */
+    top: 0;
+    z-index: 1;
+  }
+  
+  /* Table Row Styling */
+  .context-docs-table td {
+    font-size: 13px;
+    padding: 10px 15px;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Hover Effect for Rows */
+  .context-docs-table tr:hover {
+    background-color: #f0f4f8; /* Light hover effect */
+    color: #333;
+    cursor: pointer;
+  }
+  
+  /* Active/Inactive Document Row Colors */
+  .active-doc-row {
+    background-color: #d4edda; /* Light green for active documents */
+  }
+  
+  .inactive-doc-row {
+    background-color: #f8d7da; /* Light red for inactive documents */
+  }
+  
+  /* Enhanced Button Styles */
+  .context-docs-table .MuiIconButton-root {
+    color: #f44336; /* Red color for delete icon */
+    transition: transform 0.2s ease;
+  }
+  
+  .context-docs-table .MuiIconButton-root:hover {
+    transform: scale(1.2); /* Slight grow on hover */
+    color: #c62828;
+  }
+  
+  /* Input and Upload Button Styles */
+  .context-docs-upload {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .context-docs-upload input[type="file"] {
+    display: none; /* Hidden file input */
+  }
+  
+  .context-docs-upload-button {
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .context-docs-upload-button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+  }
+  
