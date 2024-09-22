@@ -12,6 +12,8 @@ const fs = require('fs');
 const pdfParse = require('pdf-parse');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const crypto = require('crypto');
+const transporter = require('../utils/mailer');
 const TranscriptionHistory = require('../models/transcriptionHistory');
 const Prompt = require('../models/Prompt'); 
 const SUPPORTED_FORMATS = ['wav', 'mp3', 'm4a', 'flac'];
@@ -193,6 +195,73 @@ router.post('/login', async (req, res) => {
     res.status(200).json({ msg: 'Login successful', user, token });
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ msg: 'Server error', error });
+  }
+});
+
+// Password reset request
+router.post('/reset-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ msg: 'No account with that email found.' });
+    }
+
+    // Generate a token
+    const token = crypto.randomBytes(20).toString('hex');
+
+    // Set token and expiration on user model
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+    await user.save();
+
+    // Send email
+    const resetURL = `http://localhost.com/reset-password/${token}`;
+    const mailOptions = {
+      to: user.email,
+      from: 'welcome@convonote.com',
+      subject: 'Password Reset',
+      text: `You are receiving this because you (or someone else) have requested the reset of the password.\n\n
+        Please click on the following link, or paste it into your browser to complete the process:\n\n
+        ${resetURL}\n\n
+        If you did not request this, please ignore this email.\n`
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) {
+        console.error('Mail sending error:', err);
+        return res.status(500).json({ msg: 'Error sending email' });
+      }
+      res.status(200).json({ msg: 'Reset link sent to your email' });
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ msg: 'Server error', error });
+  }
+});
+
+// Set new password
+router.post('/new-password', async (req, res) => {
+  const { token, password } = req.body;
+  try {
+    const user = await User.findOne({ 
+      resetPasswordToken: token, 
+      resetPasswordExpires: { $gt: Date.now() } 
+    });
+    if (!user) {
+      return res.status(400).json({ msg: 'Password reset token is invalid or has expired.' });
+    }
+
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ msg: 'Password has been reset successfully' });
+  } catch (error) {
+    console.error('New password error:', error);
     res.status(500).json({ msg: 'Server error', error });
   }
 });

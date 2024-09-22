@@ -1,8 +1,19 @@
+/* Sidebar.css */
+:root {
+  --sidebar-bg-color: #000000; /* Indigo 900 */
+  --menu-item-hover-bg: #3949AB; /* Indigo 600 */
+  --make-notes-bg: #4CAF50; /* Green 500 */
+  --make-notes-hover-bg: #66BB6A; /* Green 400 */
+  --logout-bg-color: #D32F2F; /* Red 700 */
+  --logout-hover-bg: #B71C1C; /* Red 800 */
+  --text-color: #FFFFFF;
+}
+
 .sidebar-container {
   width: 250px;
   transition: width 0.3s ease-in-out;
-  background-color: #171717;
-  color: white;
+  background-color: var(--sidebar-bg-color);
+  color: var(--text-color);
   height: 100%;
 }
 
@@ -13,30 +24,29 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  animation: fadeInEnhanced 1.5s ease-in-out; /* Apply enhanced fade-in animation */
+  animation: fadeInEnhanced 1.5s ease-in-out;
 }
 
 .sidebar {
   width: 250px;
-  background-color: #171717 !important; /* Ensure color is enforced */
+  background-color: var(--sidebar-bg-color) !important;
   transition: transform 0.3s ease-in-out;
-  position: fixed; /* Make sidebar fixed to prevent overlap */
+  position: fixed;
   left: 0;
   top: 0;
   height: 100vh;
 }
 
 .sidebar.closed {
-  transform: translateX(-250px); /* Move sidebar out of view */
+  transform: translateX(-250px);
 }
 
 .menu-button {
   display: block;
   margin: 0 auto;
-  color: rgb(105, 47, 207);
+  color: var(--text-color);
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
-/* Enhanced Fade-In Animation and Button Adjustments */
 
 /* Animation for Menu Items */
 .animated-menu .MuiListItem-root {
@@ -71,75 +81,87 @@
 @keyframes fadeInEnhanced {
   0% {
     opacity: 0;
-    transform: scale(0.95); /* Slightly smaller to add a zoom effect */
+    transform: scale(0.95);
   }
   50% {
     opacity: 0.5;
-    transform: scale(1.02); /* Slightly larger for a bounce effect */
+    transform: scale(1.02);
   }
   100% {
     opacity: 1;
-    transform: scale(1); /* Normal size */
+    transform: scale(1);
   }
-}
-
-/* Style for Round 'Make Notes' Button */
-.make-notes-button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 120px; /* Adjusted width */
-  height: 120px; /* Adjusted height */
-  background-color: #e40a1c;
-  color: #dcd3d4;
-  border-radius: 50%;
-  margin: 20px auto; /* Moved up */
-  font-weight: bold; /* Bold text */
-  font-size: 1.1rem; /* Slightly larger font */
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; /* Animation for hover */
-  text-align: center;
-}
-
-.make-notes-button:hover {
-  background-color: white; /* Change background to white */
-  color: black; /* Text color changes to black */
 }
 
 /* Enhanced Styles for Menu Items */
 .MuiListItem-root {
   margin-bottom: 10px;
   border-radius: 4px;
-  color: white;
+  color: var(--text-color);
   font-weight: bold;
-  transition: transform 0.9s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .MuiListItem-root:hover,
 .MuiListItem-root.selected {
-  background-color: #0a98e4; /* Highlight color */
-  color: white;
-  transform: translateX(5px); /* Slide effect on hover */
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Shadow effect on hover */
+  background-color: var(--menu-item-hover-bg);
+  color: var(--text-color);
+  transform: translateX(5px);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
   cursor: pointer;
 }
 
-.selected-red {
-  color: rgb(228, 213, 213) !important;
-  font-weight: bold;
-}
-
+/* Drawer Toggle Button */
 .drawer-toggle-button {
   position: absolute;
   top: 10px;
   left: 10px;
   z-index: 1000;
   color: grey;
-  background-color: #171717; /* Ensure matching color for toggle button */
+  background-color: var(--sidebar-bg-color);
   border-radius: 4px;
   transition: background-color 0.3s ease;
 }
 
 .drawer-toggle-button:hover {
   background-color: #575c6b;
+}
+
+/* Styles for the 'Make Notes' item */
+.make-notes-item {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sparkle elements */
+.make-notes-item .sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: rgb(207, 234, 85);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+/* Trigger the sparkle animation only on hover */
+.make-notes-item:hover .sparkle {
+  animation: sparkle 1.5s infinite;
+  opacity: 1; /* Ensure sparkles are visible during animation */
+}
+
+/* Animation for the sparkles */
+@keyframes sparkle {
+  0% {
+    transform: scale(0) translate(0, 0);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5) translate(-5px, -5px);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(0) translate(0, 0);
+    opacity: 0;
+  }
 }

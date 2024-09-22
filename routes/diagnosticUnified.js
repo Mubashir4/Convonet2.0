@@ -108,71 +108,102 @@ const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000, 
 
 
 const diagnosticUnified = async (req, res) => {
-  const { email, transcription, userContext, useContextDoc } = req.body;
+  const { email, transcription, userContext } = req.body; // Removed useContextDoc since we no longer need this flag
 
   if (!email || !transcription) {
     return res.status(400).json({ error: 'No email or transcription provided' });
   }
 
   const config = readConfig();
-  const initialModelType = config.diagnosis_model === '0' ? 'gpt-4o-mini' : 'gemini-1.5-flash';
+  const defaultModelType = config.diagnosis_model === '0' ? 'gpt-4o-mini' : 'gemini-1.5-flash';
 
   try {
-    let contextDocText = '';
-    if (useContextDoc) {
-      const activeContextDocs = await ContextDoc.find({ active: true });
-      contextDocText = activeContextDocs.map(doc => doc.text).join('\n');
-    }
+    // Fetch any prompts associated with the user
+    const prompts = await Prompt.find({ userName: email.trim() });
 
-    let extendedContextText = `${contextDocText}${userContext ? `\n${userContext}` : ''}`;
-    let initialPromptText = extendedContextText
-      ? `Having context:\n'${extendedContextText}'\nAnswer me:\n'${transcription}'`
-      : `Answer me:\n'${transcription}'`;
+    // Default mode: no prompts, no contextDocs, just the transcription
+    if (prompts.length === 0) {
+      let initialPromptText = `Answer me:\n'${transcription}'`;
 
-    let initialPromptConfig = [{ text: initialPromptText }];
+      let initialPromptConfig = [{ text: initialPromptText }];
+      const initialDiagnosisText = await generateResponse(initialPromptConfig, 3, 1000, defaultModelType);
 
-    const initialDiagnosisText = await generateResponse(initialPromptConfig, 3, 1000, initialModelType);
+      // Save the initial transcription history
+      let newEntry = new TranscriptionHistory({
+        email,
+        transcription,
+        diagnosisText: initialDiagnosisText,
+        createdAt: new Date(),
+      });
+      await newEntry.save();
 
-    let newEntry = new TranscriptionHistory({
-      email,
-      transcription,
-      diagnosisText: initialDiagnosisText,
-      createdAt: new Date(),
-    });
-    await newEntry.save();
+      return res.json({ responses: [initialDiagnosisText] });
+    } 
 
-    console.log(email.trim());
-    const prompts = await Prompt.find({userName: email.trim()});
-    console.log(prompts);
-    const diagnosisResponses = [initialDiagnosisText];
+    // If prompts exist, process them one by one, using the models and contextDocs specified in each prompt
+    const diagnosisResponses = [];
 
-    for (const promptObj of prompts) {
-      // Include context documents, agent responses, and transcription if specified
+    // Temporary storage for responses that may be needed as context for later prompts
+    let promptResponseMap = {};
+
+    for (let i = 0; i < prompts.length; i++) {
+      const promptObj = prompts[i];
+      
+      // Fetch contextDocs specified in the prompt
+      let promptContextDocsText = '';
+      if (promptObj.contextDocs && promptObj.contextDocs.length > 0) {
+        const contextDocs = await ContextDoc.find({ name: { $in: promptObj.contextDocs }, active: true });
+        promptContextDocsText = contextDocs.map(doc => doc.text).join('\n');
+      }
+
+      // Construct the full context for the prompt, combining contextDocs and userContext
+      let promptContext = `${promptContextDocsText}${userContext ? `\n${userContext}` : ''}`;
+
+      // If the prompt includes previous agent responses, add them
       let agentResponses = '';
       if (promptObj.connectedAgents && promptObj.connectedAgents.length > 0) {
         const agentNames = promptObj.connectedAgents.join(', ');
         agentResponses = `Agent responses: ${agentNames}`;
       }
 
-      let transcriptText = promptObj.transcript ? `\nTranscript: ${transcription}` : '';
+      // Check if the transcript needs to be included
+      let transcriptText = promptObj.transcript ? `\nThe Transcript: ${transcription}` : '';
 
-      const newPromptConfig = [
-        {
-          text: `Having context:\n'${extendedContextText}'${transcriptText}\n${agentResponses}\nand original response ${initialDiagnosisText}\nApply prompt:\n${promptObj.prompt}\nElaborate each part further`,
-        },
-      ];
+      // Build the prompt query for the first prompt differently
+      let promptConfig;
+      if (i === 0) {
+        // First prompt specifically answers the transcription
+        promptConfig = [
+          {
+            text: `Having context:\n'${promptContext}' respond to:\n${transcriptText}\nApply the following prompt to answer:\n${promptObj.prompt}`,
+          },
+        ];
+      } else {
+        // Subsequent prompts can follow the regular format
+        promptConfig = [
+          {
+            text: `Having context:\n'${promptContext}'on ${transcriptText}\n${agentResponses}\nApply prompt:\n${promptObj.prompt}`,
+          },
+        ];
+      }
 
-      const diagnosisText = await generateResponse(newPromptConfig, 3, 1000, promptObj.modelType);
+      // Use the model specified in the prompt
+      const diagnosisText = await generateResponse(promptConfig, 3, 1000, promptObj.modelType);
       diagnosisResponses.push(diagnosisText);
 
-      newEntry = new TranscriptionHistory({
+      // Save the response to the map in case it is needed for later prompts
+      promptResponseMap[promptObj.agentName] = diagnosisText;
+
+      // Save each prompt's transcription history
+      let newEntry = new TranscriptionHistory({
         email,
-        transcription: newPromptConfig[0].text,
+        transcription: promptConfig[0].text,
         diagnosisText,
         createdAt: new Date(),
       });
       await newEntry.save();
 
+      // Check and clean up older transcription history
       const historyCount = await TranscriptionHistory.countDocuments({ email });
       if (historyCount > 30) {
         const oldestEntry = await TranscriptionHistory.findOne({ email }).sort({ createdAt: 1 });
@@ -182,7 +213,9 @@ const diagnosticUnified = async (req, res) => {
       }
     }
 
+    // Return all diagnosis responses
     res.json({ responses: diagnosisResponses });
+
   } catch (error) {
     console.error(`Error processing request: ${error.message}`);
     res.status(500).json({ error: 'An error occurred during processing' });

@@ -11,6 +11,10 @@ const TranscriptionHistory = require('./models/transcriptionHistory'); // Adjust
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Create HTTP server and integrate with Socket.IO
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
@@ -36,6 +40,33 @@ app.get('/upload', (req, res) => {
 
 // Serve static files from the React frontend app
 app.use(express.static(path.join(__dirname, 'frontend', 'build')));
+
+// Socket.IO logic
+const sessions = {};
+
+io.on('connection', (socket) => {
+  const sessionId = socket.handshake.query.sessionId;
+
+  if (sessionId) {
+    // Store socket ID for the session
+    if (!sessions[sessionId]) sessions[sessionId] = {};
+    sessions[sessionId][socket.id] = socket;
+
+    socket.on('textData', (data) => {
+      // Emit text data to all sockets in the session
+      Object.values(sessions[sessionId]).forEach(s => {
+        if (s !== socket) s.emit('textData', data);
+      });
+    });
+
+    socket.on('disconnect', () => {
+      delete sessions[sessionId][socket.id];
+      if (Object.keys(sessions[sessionId]).length === 0) {
+        delete sessions[sessionId];
+      }
+    });
+  }
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'));

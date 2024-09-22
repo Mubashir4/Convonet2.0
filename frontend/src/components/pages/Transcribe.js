@@ -1,16 +1,39 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Button, Typography, TextField, Snackbar, Alert, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Button,
+  Typography,
+  TextField,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Grid,
+  IconButton,
+  Slider,
+} from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ClearIcon from '@mui/icons-material/Clear';
 import axios from 'axios';
-import { encryptData, decryptData } from '../utils/encryption';
 import CONFIG from '../../.config';
 import '../styles/Transcribe.css';
 import { useTranscription } from './TranscriptionContext';
 
-const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, mediaRecorderRef, isLoading }) => {
-  const { transcription, setTranscription, transcriptionHistory, setTranscriptionHistory } = useTranscription();
+const Transcribe = ({
+  setIsLoading,
+  setNavigateTo,
+  isRecording,
+  setIsRecording,
+  mediaRecorderRef,
+  isLoading,
+}) => {
+  const {
+    transcription,
+    setTranscription,
+    transcriptionHistory,
+    setTranscriptionHistory,
+  } = useTranscription();
   const [counter, setCounter] = useState(0);
   const [intervalTime, setIntervalTime] = useState(30);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -21,21 +44,26 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
   const streamRef = useRef(null);
   const textareaRef = useRef(null);
   const recordingIntervalRef = useRef(null);
+  const isRecordingRef = useRef(false); // New ref to track isRecording state
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
   useEffect(() => {
-    return () => {
-      if (isRecording) {
-        stopRecording();
-      }
-    };
+    isRecordingRef.current = isRecording;
   }, [isRecording]);
+
+  useEffect(() => {
+    return () => {
+      stopRecording(); // Ensure microphone is stopped when component unmounts
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const startRecording = () => {
     setIsRecording(true);
+    isRecordingRef.current = true;
     setCounter(0);
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       streamRef.current = stream;
@@ -51,7 +79,7 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
           await sendAudioChunks();
           audioChunksRef.current = [];
         }
-        if (isRecording) {
+        if (isRecordingRef.current) {
           mediaRecorder.start();
         }
       };
@@ -63,27 +91,36 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
       }, 1000);
 
       recordingIntervalRef.current = setInterval(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        if (
+          mediaRecorderRef.current &&
+          mediaRecorderRef.current.state !== 'inactive'
+        ) {
           mediaRecorderRef.current.stop();
-          mediaRecorderRef.current.start();
         }
       }, intervalTime * 1000);
     });
   };
 
-  const stopRecording = async () => {
+  const stopRecording = () => {
     setIsRecording(false);
+    isRecordingRef.current = false;
     clearInterval(counterIntervalIdRef.current);
     clearInterval(recordingIntervalRef.current);
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== 'inactive'
+    ) {
       mediaRecorderRef.current.stop();
     }
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
     }
     mediaRecorderRef.current = null;
     streamRef.current = null;
+  };
 
+  const handleStopRecording = async () => {
+    stopRecording();
     if (audioChunksRef.current.length > 0) {
       setIsLoading(true);
       await sendAudioChunks();
@@ -100,11 +137,15 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
       formData.append('audio', audioBlob, 'audio.wav');
       formData.append('counter', counter);
 
-      const response = await axios.post(`${CONFIG.SERVER_IP}/api/transcribe`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.post(
+        `${CONFIG.SERVER_IP}/api/transcribe`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
 
       if (response.data.error) {
         setSnackbarMessage(response.data.error);
@@ -126,11 +167,11 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
     const uniqueWords = new Set();
     const words = text.split(/\b\W+\b/);
 
-    let result = "";
+    let result = '';
     for (const word of words) {
       if (!uniqueWords.has(word.toLowerCase())) {
         uniqueWords.add(word.toLowerCase());
-        result += word + " ";
+        result += word + ' ';
       }
     }
 
@@ -165,16 +206,19 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
   };
 
   const handleCopyTranscription = () => {
-    navigator.clipboard.writeText(transcription).then(() => {
-      setSnackbarMessage('Transcription copied to clipboard');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-    }).catch((error) => {
-      console.error('Error copying transcription:', error);
-      setSnackbarMessage('Error copying transcription');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    });
+    navigator.clipboard
+      .writeText(transcription)
+      .then(() => {
+        setSnackbarMessage('Transcription copied to clipboard');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+      })
+      .catch((error) => {
+        console.error('Error copying transcription:', error);
+        setSnackbarMessage('Error copying transcription');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      });
   };
 
   const handleTranscriptionChange = (e) => {
@@ -183,96 +227,128 @@ const Transcribe = ({ setIsLoading, setNavigateTo, isRecording, setIsRecording, 
     setTranscriptionHistory(newValue);
   };
 
-  const handleIntervalChange = (e) => {
-    const newValue = parseInt(e.target.value, 10);
-    if (newValue >= 1) {
-      setIntervalTime(newValue);
-    }
-  };
-
-  const increaseInterval = () => {
-    setIntervalTime((prev) => prev + 1);
-  };
-
-  const decreaseInterval = () => {
-    setIntervalTime((prev) => (prev - 1 >= 5 ? prev - 1 : 5));
+  const handleIntervalChange = (event, newValue) => {
+    setIntervalTime(newValue);
   };
 
   return (
-    <Box className="transcribe-container">
-      <Typography variant="h4" className="transcribe-title">Transcribe Conversations</Typography>
-      <Typography variant="h6" className="transcribe-counter">Recording Time: {counter} seconds</Typography>
-      <Box className="transcribe-actions">
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={isRecording ? <StopIcon style={{ color: 'red' }} /> : <MicIcon />}
-          onClick={isRecording ? stopRecording : startRecording}
-          className="start-stop-button"
-        >
-          {isRecording ? 'Stop Recording' : 'Start Recording'}
-        </Button>
-      </Box>
+    <Box sx={{ flexGrow: 1, p: 2, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <Grid container spacing={3} direction="column">
+        {/* Title */}
+        <Grid item>
+          <Typography variant="h4" fontWeight="bold">
+            Transcribe Conversations
+          </Typography>
+        </Grid>
 
-      {isLoading && (
-        <Box className="loading-spinner">
-          <CircularProgress />
-          <Typography variant="h6" sx={{ marginTop: '10px' }}>Please wait...</Typography>
-        </Box>
-      )}
+        {/* Start/Stop Recording and Clear Button */}
+        <Grid item>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item>
+              <Button
+                variant="contained"
+                color={isRecording ? 'error' : 'primary'}
+                startIcon={isRecording ? <StopIcon /> : <MicIcon />}
+                onClick={isRecording ? handleStopRecording : startRecording}
+                size="large"
+                sx={{ textTransform: 'none' }}
+              >
+                {isRecording ? 'Stop Recording' : 'Start Recording'}
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<ClearIcon />}
+                onClick={handleClearTranscription}
+                size="large"
+                sx={{ textTransform: 'none' }}
+              >
+                Clear
+              </Button>
+            </Grid>
+          </Grid>
+        </Grid>
 
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={handleClearTranscription}
-        className="clear-button"
-      >
-        Clear
-      </Button>
-      <Box sx={{ position: 'relative', width: '100%' }}>
-        <TextField
-          inputRef={textareaRef}
-          className="transcribe-textarea"
-          variant="outlined"
-          multiline
-          value={transcription}
-          onChange={handleTranscriptionChange}
-          sx={{ width: '100%', height: '450px', resize: 'none', overflow: 'auto', paddingRight: '50px' }} 
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<ContentCopyIcon />}
-          onClick={handleCopyTranscription}
-          className="copy-button"
-        >
-          Copy
-        </Button>
-      </Box>
+        {/* Recording Time */}
+        {isRecording && (
+          <Grid item>
+            <Typography variant="h6" color="textSecondary">
+              Recording Time: {counter} seconds
+            </Typography>
+          </Grid>
+        )}
 
+        {/* Loading Spinner */}
+        {isLoading && (
+          <Grid item>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <CircularProgress />
+              <Typography variant="h6" sx={{ ml: 2 }}>
+                Processing...
+              </Typography>
+            </Box>
+          </Grid>
+        )}
 
-      <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '10px', backgroundColor: 'white' }}>
-        <Typography variant="body1" sx={{ marginRight: '10px' }}>Interval Time (sec):</Typography>
-        <TextField
-          type="number"
-          value={intervalTime}
-          onChange={handleIntervalChange}
-          inputProps={{ min: 1, step: 1 }}
-          sx={{ width: '100px', marginRight: '10px' }}
-        />
-        <Button variant="contained" onClick={increaseInterval} sx={{ marginRight: '5px' }}>▲</Button>
-        <Button variant="contained" onClick={decreaseInterval}>▼</Button>
-      </Box>
+        {/* Transcription TextArea and Copy Button */}
+        <Grid item>
+          <Box sx={{ position: 'relative' }}>
+            <TextField
+              inputRef={textareaRef}
+              variant="outlined"
+              multiline
+              value={transcription}
+              onChange={handleTranscriptionChange}
+              placeholder="Your transcription will appear here..."
+              sx={{ width: '100%', minHeight: '300px', backgroundColor: '#fff' }}
+            />
+            <IconButton
+              onClick={handleCopyTranscription}
+              sx={{ position: 'absolute', top: 8, right: 8 }}
+              color="primary"
+            >
+              <ContentCopyIcon />
+            </IconButton>
+          </Box>
+        </Grid>
 
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={stopRecording}
-        className="stop-recording-button"
-      >
-        Stop Recording
-      </Button>
+        {/* Interval Time Settings */}
+        <Grid item>
+          <Typography variant="body1" gutterBottom>
+            Interval Time (sec): {intervalTime}
+          </Typography>
+          <Slider
+            value={intervalTime}
+            onChange={handleIntervalChange}
+            min={5}
+            max={60}
+            step={1}
+            valueLabelDisplay="auto"
+            sx={{ width: '100%' }}
+          />
+        </Grid>
 
+        {/* Stop Recording Button at the End */}
+        {isRecording && (
+          <Grid item>
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<StopIcon />}
+              onClick={handleStopRecording}
+              size="large"
+              fullWidth
+              sx={{ textTransform: 'none' }}
+            >
+              Stop Recording
+            </Button>
+          </Grid>
+        )}
+      </Grid>
+
+      {/* Snackbar */}
       <Snackbar open={snackbarOpen} autoHideDuration={2000} onClose={handleSnackbarClose}>
         <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
           {snackbarMessage}

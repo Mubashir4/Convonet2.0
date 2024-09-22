@@ -1,18 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Box, Typography, IconButton } from '@mui/material';
+import {
+  Box,
+  Typography,
+  IconButton,
+  Collapse,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+} from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { decryptData } from '../utils/encryption';
 import '../styles/TranscriptionHistoryPage.css';
 import CONFIG from '../../.config';
 import ReactMarkdown from 'react-markdown';
 
-
 const TranscriptionHistoryPage = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedTranscription, setExpandedTranscription] = useState({});
-  const [expandedDiagnosis, setExpandedDiagnosis] = useState({});
+  const [expanded, setExpanded] = useState({});
   const [copyMessage, setCopyMessage] = useState(false);
 
   useEffect(() => {
@@ -29,7 +37,7 @@ const TranscriptionHistoryPage = () => {
         const response = await axios.get(`${CONFIG.SERVER_IP}/api/getTranscriptionHistory`, {
           params: { email },
         });
-        setHistory(response.data);
+        setHistory(response.data.reverse()); // Show latest at the top
       } catch (error) {
         console.error('Error fetching transcription history:', error);
       } finally {
@@ -46,24 +54,17 @@ const TranscriptionHistoryPage = () => {
     setTimeout(() => setCopyMessage(false), 2000); // Show message for 2 seconds
   };
 
-  const handleToggleExpandTranscription = (index) => {
-    setExpandedTranscription(prevState => ({
+  const handleToggleExpand = (index) => {
+    setExpanded((prevState) => ({
       ...prevState,
-      [index]: !prevState[index]
-    }));
-  };
-
-  const handleToggleExpandDiagnosis = (index) => {
-    setExpandedDiagnosis(prevState => ({
-      ...prevState,
-      [index]: !prevState[index]
+      [index]: !prevState[index],
     }));
   };
 
   return (
     <Box className="history-container">
-      <Typography variant="h4" className="history-title">
-        Transcription History
+      <Typography variant="h3" className="history-title">
+        <b>History</b>
       </Typography>
       {copyMessage && <Box className="copied-message show">Copied to clipboard</Box>}
       <Box className="history-list">
@@ -71,61 +72,80 @@ const TranscriptionHistoryPage = () => {
           <Typography>Loading...</Typography>
         ) : (
           history.map((entry, index) => (
-            <Box key={index} className="history-item">
-              {entry.createdAt && (
+            <Card key={index} className="history-item">
+              <CardContent>
                 <Typography variant="body2" className="timestamp">
-                  {new Date(entry.createdAt).toLocaleString()}
+                  {entry.createdAt && new Date(entry.createdAt).toLocaleString()}
                 </Typography>
-              )}
-              <Box className="transcription-box">
-              <Box
-    className={expandedTranscription[index] ? 'expanded' : 'collapsed1'} // Use CSS classes to control display
-    sx={{  maxHeight: expandedTranscription[index] ? 'none' : '4.5em', overflow: 'hidden' }} // Set maxHeight for truncation
-  >
-                  <ReactMarkdown>{entry.transcription}</ReactMarkdown>
+
+                {/* Response Section */}
+                <Box className="response-box">
+                  <Box className="section-header">
+                    <Typography variant="h6" className="section-title">
+                      Response
+                    </Typography>
+                    <IconButton
+                      onClick={() => handleCopyToClipboard(entry.diagnosisText)}
+                      className="copy-button"
+                    >
+                      <ContentCopyIcon />
+                    </IconButton>
+                  </Box>
+                  <Collapse in={expanded[index]} collapsedSize={100}>
+                    <Typography variant="body1" className="response-text">
+                      <ReactMarkdown>{entry.diagnosisText}</ReactMarkdown>
+                    </Typography>
+                  </Collapse>
+                  <CardActions className="expand-actions">
+                    <Button
+                      size="small"
+                      onClick={() => handleToggleExpand(index)}
+                      endIcon={
+                        <ExpandMoreIcon
+                          className={`expand-icon ${expanded[index] ? 'expanded' : ''}`}
+                        />
+                      }
+                    >
+                      {expanded[index] ? 'Show Less' : 'Show More'}
+                    </Button>
+                  </CardActions>
                 </Box>
-                <IconButton
-                  onClick={() => handleCopyToClipboard(entry.transcription)}
-                  sx={{ position: 'absolute', top: 0, right: 5, color: 'white' }}
-                >
-                  <ContentCopyIcon />
-                </IconButton>
-                {entry.transcription && (
-                  <Typography
-                    variant="body2"
-                    className="show-more"
-                    onClick={() => handleToggleExpandTranscription(index)}
-                  >
-                    {expandedTranscription[index] ? 'Show Less' : 'Show More'}
-                  </Typography>
-                )}
-              </Box>
-              <Box className="response-box">
-                <Typography
-                  variant="body1"
-                  className={expandedDiagnosis[index] ? '' : 'collapsed-description1'}
-                  sx={{ paddingRight: '40px' }}
-                >
-                  <ReactMarkdown>{entry.diagnosisText}</ReactMarkdown>
-                </Typography>
-                <IconButton
-                  onClick={() => handleCopyToClipboard(entry.diagnosisText)}
-                  sx={{ position: 'absolute', top: 0, right: 5, color: 'white' }}
-                >
-                  <ContentCopyIcon />
-                </IconButton>
-                {entry.diagnosisText && (
-                  <Typography
-                    variant="body2"
-                    className="show-more"
-                    onClick={() => handleToggleExpandDiagnosis(index)}
-                  >
-                    {expandedDiagnosis[index] ? 'Show Less' : 'Show More'}
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-          )).reverse() // Reverse to show latest at the bottom
+
+                {/* Transcription Section */}
+                <Box className="transcription-box">
+                  <Box className="section-header">
+                    <Typography variant="h6" className="section-title">
+                      Query
+                    </Typography>
+                    <IconButton
+                      onClick={() => handleCopyToClipboard(entry.transcription)}
+                      className="copy-button"
+                    >
+                      <ContentCopyIcon />
+                    </IconButton>
+                  </Box>
+                  <Collapse in={expanded[index]} collapsedSize={80}>
+                    <Typography variant="body2" className="transcription-text">
+                      <ReactMarkdown>{entry.transcription}</ReactMarkdown>
+                    </Typography>
+                  </Collapse>
+                  <CardActions className="expand-actions">
+                    <Button
+                      size="small"
+                      onClick={() => handleToggleExpand(index)}
+                      endIcon={
+                        <ExpandMoreIcon
+                          className={`expand-icon ${expanded[index] ? 'expanded' : ''}`}
+                        />
+                      }
+                    >
+                      {expanded[index] ? 'Show Less' : 'Show More'}
+                    </Button>
+                  </CardActions>
+                </Box>
+              </CardContent>
+            </Card>
+          ))
         )}
       </Box>
     </Box>

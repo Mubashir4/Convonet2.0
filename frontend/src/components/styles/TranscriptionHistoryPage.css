@@ -2,120 +2,149 @@
 .history-container {
   padding: 20px;
   margin: auto;
-  max-width: 96%; /* Limit max width for better readability */
-  background-color: #ffffff;
+  max-width: 95%; /* Adjust as needed */
+  background-color: #f5f5f5;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: scroll;
-}
-
-.history-list {
-  flex-grow: 1;
-  font-weight: bold;
-  font-size: 1.8rem;
-  color: #333;
-  margin-bottom: 20px;
-  max-height: calc(100vh - 80px);
-  overflow-y: auto;
 }
 
 /* Title Styling */
 .history-title {
   font-weight: bold;
-  font-size: 1.5rem; /* Slightly smaller font size */
+  font-size: 2rem;
   color: #333;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
-/* Loading and copied message styles */
+/* Copied Message */
 .copied-message {
   text-align: center;
-  background-color: #007bff;
+  background-color: #4caf50;
   color: white;
-  padding: 8px;
-  margin-bottom: 15px;
+  padding: 10px;
+  margin-bottom: 20px;
   border-radius: 4px;
-  display: none; /* Initially hidden */
+  display: none;
   animation: fadeIn 0.5s ease;
 }
 
 .copied-message.show {
-  display: block; /* Show when active */
+  display: block;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* History List */
 .history-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 25px;
 }
 
-/* History Item Box */
+/* History Item */
 .history-item {
-  background-color: #1e1f1f;
-  padding: 15px;
+  background-color: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(49, 4, 4, 0.05);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 0.875rem; /* Smaller font size for general content */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 /* Timestamp */
 .timestamp {
-  font-size: 0.75rem; /* Smaller font size for less important text */
-  color: #666;
-}
-
-/* Transcription and Response Boxes */
-.transcription-box, .response-box {
-  position: relative;
-  padding: 10px;
-  background-color: #ffffff;
-  border-radius: 6px;
-  box-shadow: 0 1px 4px rgba(16, 1, 1, 0.793);
-  font-size: 0.875rem; /* Consistent smaller font size */
-}
-
-/* Collapsed Text */
-.collapsed1, .collapsed-description1 {
-  overflow: hidden;
-  text-overflow: clip;
-  white-space: normal;
-  max-height: 4.5em; /* Adjust max height for approximately 3 lines of text */
-  font-size: 0.875rem; /* Smaller font size */
-}
-
-/* Show More/Less Button */
-.show-more {
-  color: #007bff;
-  cursor: pointer;
-  font-size: 0.75rem; /* Smaller font size for utility text */
+  font-size: 0.85rem;
+  color: #888;
   text-align: right;
-  margin-top: 5px;
+  margin-bottom: 10px;
 }
 
-/* Icon Button for Copy */
-.MuiIconButton-root {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+/* Section Header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Copy Button */
+.copy-button {
+  color: #555;
+  transition: color 0.2s ease;
+}
+
+.copy-button:hover {
+  color: #000;
+}
+
+/* Response and Transcription Boxes */
+.response-box {
+  background-color: #e0f7fa; /* Light cyan for response */
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.transcription-box {
+  background-color: #fff3e0; /* Light orange for query */
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+/* Text Content */
+.response-text,
+.transcription-text {
+  font-size: 0.95rem;
+  color: #444;
+}
+
+/* Expand Actions */
+.expand-actions {
+  padding: 0;
+  margin: 0;
+}
+
+.expand-actions .MuiButton-root {
+  text-transform: none;
+  font-size: 0.85rem;
   color: #007bff;
-  background-color: white;
-  border-radius: 50%;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-  font-size: 0.75rem; /* Smaller font size for icons */
 }
 
-.MuiIconButton-root:hover {
-  background-color: #000000;
-  transform: scale(1.1);
+.expand-icon {
+  transition: transform 0.3s ease;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .history-container {
+    padding: 15px;
+  }
+
+  .history-title {
+    font-size: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 0.95rem;
+  }
+
+  .response-text,
+  .transcription-text {
+    font-size: 0.9rem;
+  }
 }

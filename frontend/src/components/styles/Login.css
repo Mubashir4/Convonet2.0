@@ -49,3 +49,13 @@
 .signup-link:hover {
   color: rgb(112, 10, 10); /* Slightly darker blue on hover */
 }
+.forgot-password-link {
+  display: block;
+  margin-top: 10px;
+  color: #2a00b3;
+  text-decoration: none;
+}
+
+.forgot-password-link:hover {
+  color: rgb(112, 10, 10);
+}

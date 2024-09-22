@@ -9,7 +9,9 @@ const UserSchema = new mongoose.Schema({
   number: { type: String, required: false },
   user_active: { type: Boolean, default: false },
   role: { type: String, enum: ['admin', 'doctor'], required: true },
-  tokens: [{ token: { type: String, required: true } }]
+  tokens: [{ token: { type: String, required: true } }],
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
 });
 
 // Hash the password before saving the user

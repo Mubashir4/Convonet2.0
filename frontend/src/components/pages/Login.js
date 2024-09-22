@@ -50,6 +50,7 @@ const Login = () => {
             />
             <Button type="submit" variant="contained" color="primary" fullWidth className="login-button">Login</Button>
           </form>
+          <Link to="/reset-password" className="forgot-password-link">Forgot Password?</Link>
           <Link to="/signup" className="signup-link">Create a new account</Link>
         </Box>
       </Box>

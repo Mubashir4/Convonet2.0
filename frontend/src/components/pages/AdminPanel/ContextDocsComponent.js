@@ -4,7 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import CONFIG from '../../../.config.js';
 import { decryptData } from '../../utils/encryption';
-import '../../ContextDocsComponent.css';
+import '../../styles/ContextDocsComponent.css';
 
 
 const ContextDocsComponent = ({ contextDocs = [], setContextDocs, setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen }) => {

@@ -1,18 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Button, TextField, Snackbar, Alert, Typography, CircularProgress, Backdrop, IconButton } from '@mui/material';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import DeleteIcon from '@mui/icons-material/Delete';
+// MakeNotes.js
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Snackbar,
+  Alert,
+  Typography,
+  CircularProgress,
+  Backdrop,
+  IconButton,
+  Grid,
+  Tooltip,
+  Button,
+} from '@mui/material';
+import {
+  ContentCopy as ContentCopyIcon,
+  ArrowBack as ArrowBackIcon,
+  ArrowForward as ArrowForwardIcon,
+} from '@mui/icons-material';
 import axios from 'axios';
 import { decryptData, encryptData } from '../utils/encryption';
 import '../styles/Diagnosis.css';
 import CONFIG from '../../.config';
-import { useTranscription } from './TranscriptionContext'; // Import the context hook
+import { useTranscription } from './TranscriptionContext';
 
 const MakeNotes = () => {
-  const { transcription, setTranscription, transcriptionHistory, setTranscriptionHistory } = useTranscription();
+  const {
+    transcription,
+    setTranscription,
+    transcriptionHistory,
+    setTranscriptionHistory,
+  } = useTranscription();
   const [diagnosis, setDiagnosis] = useState([]);
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -20,44 +37,37 @@ const MakeNotes = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [backdropOpen, setBackdropOpen] = useState(false);
-  const transcriptionRef = useRef(null);
 
   useEffect(() => {
-    // Set userContext to empty string when entering the page
+    // Initialize user context and transcription
     sessionStorage.setItem('userContext', encryptData(''));
-
     const savedTranscription = sessionStorage.getItem('transcription');
     if (savedTranscription) {
       const decryptedTranscription = decryptData(savedTranscription);
       if (decryptedTranscription) {
-        //setTranscription(decryptedTranscription);
-        generateDiagnosis(decryptedTranscription); // Initial run without any prompt
+        generateDiagnosis(decryptedTranscription);
       } else {
         console.error('Failed to decrypt transcription data');
       }
     }
 
     const useContextDocPreference = sessionStorage.getItem('useContextDoc');
-    sessionStorage.setItem('useContextDoc', useContextDocPreference !== 'false' ? 'true' : 'false');
+    sessionStorage.setItem(
+      'useContextDoc',
+      useContextDocPreference !== 'false' ? 'true' : 'false'
+    );
 
     return () => {
-      // Set userContext to empty string when leaving the page
+      // Cleanup
       sessionStorage.setItem('userContext', encryptData(''));
     };
   }, []);
-
-  useEffect(() => {
-    if (transcriptionRef.current) {
-      transcriptionRef.current.scrollTop = transcriptionRef.current.scrollHeight;
-    }
-  }, [transcription]);
 
   const generateDiagnosis = async (text) => {
     setLoading(true);
     setBackdropOpen(true);
     const encryptedUser = sessionStorage.getItem('user');
     const user = encryptedUser ? decryptData(encryptedUser) : null;
-    const username = user.name
     const email = user ? user.email : '';
     if (!email) {
       console.error('User email is not available');
@@ -73,28 +83,29 @@ const MakeNotes = () => {
     const useContextDoc = useContextDocPreference !== 'false';
 
     const encryptedUserContext = sessionStorage.getItem('userContext');
-    const userContext = encryptedUserContext ? decryptData(encryptedUserContext) : '';
+    const userContext = encryptedUserContext
+      ? decryptData(encryptedUserContext)
+      : '';
     try {
       const response = await axios.post(`${CONFIG.SERVER_IP}/api/diagnose`, {
         email,
         userContext,
         transcription: text,
-        useContextDoc
+        useContextDoc,
       });
-      
-      const encryptedResponses = response.data.responses.map(resp => encryptData(resp));
-      const newResponse = response.data.responses[0];
-      const newText = `${text}\n${newResponse}`;
+
+      const encryptedResponses = response.data.responses.map((resp) =>
+        encryptData(resp)
+      );
       setDiagnosis(encryptedResponses);
       setCurrentIndex(encryptedResponses.length - 1);
-      //setTranscription(newText);
-      setSnackbarMessage('Diagnosis completed successfully');
+      setSnackbarMessage('Notes generated successfully');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
       setBackdropOpen(false);
     } catch (error) {
       console.error('Error fetching Notes:', error);
-      setSnackbarMessage('Error fetching Notes', error);
+      setSnackbarMessage('Error fetching Notes');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
       setBackdropOpen(false);
@@ -103,45 +114,22 @@ const MakeNotes = () => {
     }
   };
 
-  const handleDiagnosis = () => {
-    const previousTranscription = sessionStorage.getItem('transcription');
-    const encryptedUserContext = sessionStorage.getItem('userContext');
-    let userContext = encryptedUserContext ? decryptData(encryptedUserContext) : '';
-
-    if (previousTranscription) {
-      const decryptedPreviousTranscription = decryptData(previousTranscription);
-      userContext += `\n${decryptedPreviousTranscription}`;
-    }
-
-    const currentDiagnosis = diagnosis[currentIndex] ? decryptData(diagnosis[currentIndex]).trim() : '';
-    if (currentDiagnosis) {
-      userContext += `\n${currentDiagnosis}`;
-    }
-
-    sessionStorage.setItem('userContext', encryptData(userContext));
-    sessionStorage.setItem('transcription', encryptData(transcription));
-
-    generateDiagnosis(transcription);
-    setTranscription('');
-  };
-
   const handleCopyToClipboard = () => {
-    const diagnosisTextElement = document.querySelector('.ai-diagnosis-textfield');
-    if (diagnosisTextElement) {
-      const range = document.createRange();
-      range.selectNodeContents(diagnosisTextElement);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-      document.execCommand('copy');
-      setSnackbarMessage('Diagnosis copied to clipboard');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-    } else {
-      setSnackbarMessage('Failed to copy diagnosis');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    }
+    const currentDiagnosis = diagnosis[currentIndex]
+      ? decryptData(diagnosis[currentIndex])
+      : '';
+    navigator.clipboard.writeText(currentDiagnosis).then(
+      () => {
+        setSnackbarMessage('Notes copied to clipboard');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+      },
+      () => {
+        setSnackbarMessage('Failed to copy notes');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    );
   };
 
   const handleSnackbarClose = () => {
@@ -160,77 +148,99 @@ const MakeNotes = () => {
     }
   };
 
-  const handleClearTranscription = () => {
-    setTranscription('');
-    sessionStorage.removeItem('transcription');
-  };
-
   return (
     <Box className="diagnosis-container">
       <Typography variant="h4" className="diagnosis-title">
-        Make Notes Page
+        Make Notes
       </Typography>
-      <Box className="transcription-container">
-        <AccountCircleIcon className="user-icon" />
-        <TextField
-          inputRef={transcriptionRef}
-          variant="outlined"
-          multiline
-          fullWidth
-          rows={6}
-          value={transcription}
-          onChange={(e) => setTranscription(e.target.value)}
-          className="diagnosis-textfield"
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleDiagnosis}
-          className="diagnosis-button"
-          disabled={loading}
-          sx={{ marginLeft: '20px' }}
-        >
-          {loading ? <CircularProgress size={24} /> : 'Make Notes'}
-        </Button>
-        <IconButton
-          onClick={handleClearTranscription}
-          color="secondary"
-          sx={{ marginLeft: '10px' }}
-        >
-          <DeleteIcon />
-        </IconButton>
-      </Box>
-      <Typography variant="body1" sx={{ marginTop: '10px', color: 'white' }}>
-        Response {currentIndex + 1} of {diagnosis.length}
-      </Typography>
-      <Box className="diagnosis-textarea-wrapper">
-        <Button onClick={handlePreviousResponse} disabled={currentIndex === 0}><ArrowBackIcon /></Button>
-        <Box className="ai-diagnosis-textfield">
-          <pre style={{ whiteSpace: 'pre-wrap', overflowY: 'auto' }}>{diagnosis.length > 0 ? decryptData(diagnosis[currentIndex]) : ''}</pre>
+      <Grid container spacing={2} alignItems="flex-start">
+        {/* Diagnosis Output */}
+        <Grid item xs={12}>
+          <Typography variant="h6" sx={{ marginTop: '20px' }}>
+          </Typography>
+          {/* Copy Button */}
           <Button
             variant="contained"
             color="primary"
             startIcon={<ContentCopyIcon />}
             onClick={handleCopyToClipboard}
-            sx={{ position: 'absolute', top: 10, right: 10 }}
+            disabled={diagnosis.length === 0}
+            className="copy-button"
           >
             Copy
           </Button>
-        </Box>
-        <Button onClick={handleNextResponse} disabled={currentIndex === diagnosis.length - 1}><ArrowForwardIcon /></Button>
-      </Box>
+          <Box className="diagnosis-textarea-wrapper">
+            <Grid container spacing={1} alignItems="center">
+              <Grid item>
+                <Tooltip title="Previous Note">
+                  <span>
+                    <IconButton
+                      onClick={handlePreviousResponse}
+                      disabled={currentIndex === 0}
+                    >
+                      <ArrowBackIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Grid>
+              <Grid item xs>
+                <Box className="ai-diagnosis-textfield">
+                  {diagnosis.length > 0 ? (
+                    <Typography variant="body1" component="div">
+                      {decryptData(diagnosis[currentIndex])}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body1" color="textSecondary">
+                      No notes generated yet.
+                    </Typography>
+                  )}
+                </Box>
+              </Grid>
+              <Grid item>
+                <Tooltip title="Next Note">
+                  <span>
+                    <IconButton
+                      onClick={handleNextResponse}
+                      disabled={currentIndex === diagnosis.length - 1}
+                    >
+                      <ArrowForwardIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Grid>
+            </Grid>
+          </Box>
+          {/* Notes Counter */}
+          {diagnosis.length > 0 && (
+            <Typography variant="caption" sx={{ marginTop: '10px', display: 'block' }}>
+              Note {currentIndex + 1} of {diagnosis.length}
+            </Typography>
+          )}
+        </Grid>
+      </Grid>
+
+      {/* Snackbar for Notifications */}
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={2000}
+        autoHideDuration={3000}
         onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
-      <Backdrop open={backdropOpen} style={{ color: '#fff', zIndex: 1000 }}>
-        <Typography variant="h6">Processing</Typography>
+
+      {/* Backdrop with Loading Indicator */}
+      <Backdrop open={backdropOpen} style={{ color: '#fff', zIndex: 1300 }}>
         <CircularProgress color="inherit" />
+        <Typography variant="h6" sx={{ marginLeft: '10px' }}>
+          Generating Notes...
+        </Typography>
       </Backdrop>
     </Box>
   );

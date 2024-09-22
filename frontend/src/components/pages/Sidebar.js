@@ -1,10 +1,41 @@
+/* Sidebar.js */
 import React, { useState, useEffect } from 'react';
-import { List, ListItem, ListItemText, Divider, Box, Typography, IconButton, Drawer, Button } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
+import {
+  List,
+  ListItem,
+  ListItemText,
+  Divider,
+  Box,
+  Typography,
+  IconButton,
+  Drawer,
+  ListItemIcon,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  AdminPanelSettings,
+  Mic,
+  NoteAdd,
+  Scanner,
+  History as HistoryIcon,
+  Logout,
+} from '@mui/icons-material';
 import '../styles/Sidebar.css';
 
-const Sidebar = ({ doctorName, onOptionSelect, isOpen, toggleSidebar, isAdmin, onLogout, isRecording, stopRecording, setNavigateTo }) => {
-  const [selectedOption, setSelectedOption] = useState(isAdmin ? 'Admin Panel' : 'My Notes');
+const drawerWidth = 250;
+
+const Sidebar = ({
+  doctorName,
+  onOptionSelect,
+  isOpen,
+  toggleSidebar,
+  isAdmin,
+  onLogout,
+  isRecording,
+  stopRecording,
+  setNavigateTo,
+}) => {
+  const [selectedOption, setSelectedOption] = useState(isAdmin ? 'Admin Panel' : 'Transcribe');
 
   useEffect(() => {
     if (onOptionSelect) {
@@ -30,7 +61,18 @@ const Sidebar = ({ doctorName, onOptionSelect, isOpen, toggleSidebar, isAdmin, o
   };
 
   const adminOptions = isAdmin ? ['Admin Panel'] : [];
-  const userOptions = ['History','Transcribe']; // Removed 'Make Notes' from here
+  const userOptions = ['Transcribe', 'Make Notes'];
+  const bottomOptions = ['Scan Image', 'History'];
+
+  // Map of icons for each menu item
+  const iconMap = {
+    'Admin Panel': <AdminPanelSettings />,
+    Transcribe: <Mic />,
+    'Make Notes': <NoteAdd />,
+    'Scan Image': <Scanner />,
+    History: <HistoryIcon />,
+    Logout: <Logout />,
+  };
 
   useEffect(() => {
     const dashboardContainer = document.querySelector('.dashboard-container');
@@ -53,71 +95,125 @@ const Sidebar = ({ doctorName, onOptionSelect, isOpen, toggleSidebar, isAdmin, o
       anchor="left"
       sx={{
         '& .MuiDrawer-paper': {
-          backgroundColor: '#171717',
+          backgroundColor: 'var(--sidebar-bg-color)',
           width: '250px',
           transition: 'width 0.3s ease-in-out',
           overflowX: 'hidden',
-        }
+        },
       }}
     >
-      <Box className="sidebar-content" sx={{ padding: '10px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <Box>
-          <IconButton onClick={toggleSidebar} className="menu-button" sx={{ color: 'white', display: 'block', margin: '0 auto' }}>
+      <Box
+        className="sidebar-content"
+        sx={{
+          width: drawerWidth,
+          backgroundColor: 'var(--sidebar-bg-color)',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          color: 'white',
+          padding: '20px',
+        }}
+      >
+        {/* Top section */}
+        <Box sx={{ flexGrow: 1 }}>
+          <IconButton
+            onClick={toggleSidebar}
+            className="menu-button"
+            sx={{ color: 'white', display: 'block', margin: '0 auto' }}
+          >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ textAlign: 'center', color: 'white', animation: 'fadeIn 1s ease-in-out' }}>
-            {doctorName}
+          <Typography
+            variant="h6"
+            sx={{ textAlign: 'center', color: 'white', animation: 'fadeIn 1s ease-in-out', marginTop: 2 }}
+          >
+            <b>{doctorName}</b>
           </Typography>
           <List component="nav" className="animated-menu">
-            {adminOptions.concat(userOptions).map((text) => (
+            {adminOptions.concat(userOptions).map((text) => {
+              const isMakeNotes = text === 'Make Notes';
+              const icon = iconMap[text];
+              return (
+                <ListItem
+                  button
+                  key={text}
+                  onClick={() => handleOptionClick(text)}
+                  className={isMakeNotes ? 'make-notes-item' : ''}
+                  sx={{
+                    marginBottom: 1,
+                    padding: '4px 16px',
+                    backgroundColor: isMakeNotes ? 'var(--make-notes-bg)' : 'transparent',
+                    color: 'white',
+                    transition: 'transform 0.3s ease, background-color 0.3s ease, color 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      backgroundColor: isMakeNotes ? 'var(--make-notes-hover-bg)' : 'var(--menu-item-hover-bg)',
+                      color: 'white',
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'inherit', minWidth: '40px' }}>{icon}</ListItemIcon>
+                  <ListItemText primary={text} />
+                  {isMakeNotes && (
+                    <>
+                      <div className="sparkle" style={{ top: '10%', left: '20%', animationDelay: '0s' }}></div>
+                      <div className="sparkle" style={{ top: '30%', left: '50%', animationDelay: '0.3s' }}></div>
+                      <div className="sparkle" style={{ top: '60%', left: '70%', animationDelay: '0.6s' }}></div>
+                      <div className="sparkle" style={{ top: '80%', left: '40%', animationDelay: '0.9s' }}></div>
+                      <div className="sparkle" style={{ top: '50%', left: '80%', animationDelay: '1.2s' }}></div>
+                    </>
+                  )}
+                </ListItem>
+              );
+            })}
+          </List>
+        </Box>
+        {/* Bottom section */}
+        <Box>
+          <List component="nav">
+            {bottomOptions.map((text) => (
               <ListItem
+                button
                 key={text}
                 onClick={() => handleOptionClick(text)}
                 sx={{
-                  marginBottom: 1,
                   padding: '4px 16px',
-                  transition: 'transform 0.3s ease, color 0.3s ease',
                   '&:hover': {
-                    transform: 'scale(1.05)',
-                    color: '#e40a1c',
-                  }
+                    backgroundColor: 'var(--menu-item-hover-bg)',
+                    color: 'white',
+                  },
                 }}
               >
-                <ListItemText primary={text} sx={{ color: 'white' }} />
+                <ListItemIcon sx={{ color: 'inherit', minWidth: '40px' }}>{iconMap[text]}</ListItemIcon>
+                <ListItemText
+                  primary={text}
+                  sx={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'white' }}
+                />
               </ListItem>
             ))}
           </List>
-          {/* 'Make Notes' Button with Updated Positioning and Size */}
-        <Button
-          onClick={() => handleOptionClick('Make Notes')}
-          className="make-notes-button"
-          sx={{
-            width: '150px', // Smaller width
-            height: '150px', // Smaller height
-            backgroundColor: '#e40a1c',
-            color: '#dcd3d4',
-            borderRadius: '50%',
-            margin: '10px auto', // Closer to Logout
-            fontWeight: 'bold', // Bold text
-            fontSize: '1.1rem', // Slightly larger font
-            display: 'block',
-            '&:hover': {
-              backgroundColor: '#f5c6cb',
-              transform: 'scale(1.1)', // Animation effect on hover
-              transition: 'transform 0.2s ease-in-out',
-            },
-          }}
-        >
-          Make Notes
-        </Button>
-          <Divider sx={{ backgroundColor: 'white', animation: 'fadeIn 1.5s ease-in-out' }} />
-          <ListItem onClick={onLogout}>
-            <ListItemText primary="Logout" sx={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'white' }} />
+          <Divider sx={{ backgroundColor: 'white', marginY: 1 }} />
+          {/* Logout option */}
+          <ListItem
+            button
+            onClick={onLogout}
+            sx={{
+              padding: '4px 16px',
+              backgroundColor: 'var(--logout-bg-color)',
+              '&:hover': {
+                backgroundColor: 'var(--logout-hover-bg)',
+                color: 'white',
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit', minWidth: '40px' }}>{iconMap['Logout']}</ListItemIcon>
+            <ListItemText
+              primary="Logout"
+              sx={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'white' }}
+            />
           </ListItem>
-          <Divider sx={{ backgroundColor: 'white', animation: 'fadeIn 1.5s ease-in-out' }} />
         </Box>
-
-        
       </Box>
     </Drawer>
   );

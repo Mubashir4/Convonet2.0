@@ -150,23 +150,7 @@ const AdminPanel = () => {
           >
             Configuration
           </ToggleButton>
-          <ToggleButton
-            value="keys"
-            aria-label="Keys"
-            sx={{
-              backgroundColor: 'grey.900',
-              color: 'white',
-              '&.Mui-selected': {
-                backgroundColor: 'primary.main',
-                color: 'white',
-              },
-              '&:hover': {
-                backgroundColor: 'grey.800',
-              },
-            }}
-          >
-            Keys
-          </ToggleButton>
+          
         </ToggleButtonGroup>
       </Box>
 

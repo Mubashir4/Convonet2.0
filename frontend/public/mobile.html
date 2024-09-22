@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mobile OCR</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #status { white-space: pre-wrap; margin-top: 10px; }
+    #confirmBtn { margin-top: 10px; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Take a Picture for OCR</h1>
+  <!-- Add capture="environment" back -->
+  <input type="file" accept="image/*" capture="environment" id="imageInput">
+  <p id="status"></p>
+  <button id="confirmBtn">Confirm and Send</button>
+
+  <!-- Tesseract.js -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
+  <!-- Socket.IO -->
+  <!-- Use the CDN to ensure the script loads correctly -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('sessionId');
+    const socket = io('http://YOUR_SERVER_IP:5000', { query: { sessionId } });
+
+    const imageInput = document.getElementById('imageInput');
+    const status = document.getElementById('status');
+    const confirmBtn = document.getElementById('confirmBtn');
+    let extractedText = '';
+
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      if (file) {
+        status.textContent = 'Processing image...';
+        Tesseract.recognize(
+          file,
+          'eng',
+          { logger: m => console.log(m) }
+        ).then(({ data: { text } }) => {
+          extractedText = text.trim();
+          status.textContent = 'Extracted Text:\n' + extractedText;
+          confirmBtn.style.display = 'block';
+        }).catch(err => {
+          status.textContent = 'Error during OCR: ' + err.message;
+        });
+      }
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      socket.emit('textData', extractedText);
+      alert('Text sent to desktop!');
+      confirmBtn.style.display = 'none';
+      status.textContent = '';
+      imageInput.value = '';
+    });
+  </script>
+</body>
+</html>

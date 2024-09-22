@@ -7,6 +7,7 @@ import ContextDocument from './ContextDocument';
 import Transcribe from './Transcribe';
 import Diagnosis from './Diagnosis';
 import AdminPanel from './AdminPanel';
+import ScanImage from './scanImages'; // Import the scanImage component
 import TranscriptionHistory from './TranscriptionHistoryPage';
 import { decryptData } from '../utils/encryption';
 import '../styles/Dashboard.css';
@@ -95,6 +96,8 @@ const Dashboard = () => {
         );
       case 'Make Notes':
         return <Diagnosis />;
+      case 'Scan Image':
+          return <ScanImage />;
       case 'History':
         return <TranscriptionHistory />;
       default:
@@ -140,7 +143,7 @@ const Dashboard = () => {
           padding: '20px',
           transition: 'margin-left 0.3s ease-in-out',
           marginLeft: isSidebarOpen ? '250px' : '0',
-          backgroundColor: '#171717'
+          backgroundColor: '#000000'
         }}
       >
         {isLoading ? (
