@@ -218,10 +218,10 @@ router.post('/reset-password', async (req, res) => {
     await user.save();
 
     // Send email
-    const resetURL = `http://localhost.com/reset-password/${token}`;
+    const resetURL = `https://app.convonote.com/reset-password/${token}`;
     const mailOptions = {
       to: user.email,
-      from: 'welcome@convonote.com',
+      from: 'begin@convonote.com',
       subject: 'Password Reset',
       text: `You are receiving this because you (or someone else) have requested the reset of the password.\n\n
         Please click on the following link, or paste it into your browser to complete the process:\n\n

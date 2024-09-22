@@ -2,29 +2,38 @@
 <html>
 <head>
   <title>Mobile OCR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     #status { white-space: pre-wrap; margin-top: 10px; }
-    #confirmBtn { margin-top: 10px; display: none; }
+    #confirmBtn { margin-top: 10px; display: none; font-size: 18px; padding: 10px 20px; }
+    #imageInput { font-size: 18px; padding: 10px 0; }
+    h1 { font-size: 24px; }
   </style>
 </head>
 <body>
   <h1>Take a Picture for OCR</h1>
-  <!-- Add capture="environment" back -->
-  <input type="file" accept="image/*" capture="environment" id="imageInput">
+  <input type="file" accept="image/*" id="imageInput">
   <p id="status"></p>
   <button id="confirmBtn">Confirm and Send</button>
 
   <!-- Tesseract.js -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
   <!-- Socket.IO -->
-  <!-- Use the CDN to ensure the script loads correctly -->
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('sessionId');
-    const socket = io('http://YOUR_SERVER_IP:5000', { query: { sessionId } });
+    const socket = io('https://app.convonote.com', { query: { sessionId } });
+
+    socket.on('connect', () => {
+      console.log('Connected to server');
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('Connection Error:', err.message);
+    });
 
     const imageInput = document.getElementById('imageInput');
     const status = document.getElementById('status');

@@ -13,7 +13,12 @@ const PORT = process.env.PORT || 5000;
 
 // Create HTTP server and integrate with Socket.IO
 const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+  cors: {
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST']
+  }
+});
 
 app.use(cors());
 app.use(express.json());
@@ -68,11 +73,13 @@ io.on('connection', (socket) => {
   }
 });
 
+
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
 });
 
-app.listen(PORT, () => {
+http.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 

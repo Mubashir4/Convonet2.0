@@ -1,61 +1,94 @@
+/* Login.css */
 .login-container {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding-top: 100px; /* Ensure there's space for the top bar */
-  height: 100vh;
+  align-items: center;
+  min-height: 100vh;
   background-image: url('../../assets/dashBackground.png');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  position: relative;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
 }
 
 .login-content {
-  display: flex;
-  align-items: center;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .login-box {
-  width: 100%;
-  max-width: 400px;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
+  padding: 40px 30px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
   text-align: center;
-  position: relative; /* Ensure the icon can be positioned relative to the box */
 }
 
 .login-title {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #2a00b3; /* Primary color */
+}
+
+.login-subtitle {
+  margin-bottom: 30px;
+  color: #555;
 }
 
 .login-form .login-input {
   margin-bottom: 20px;
 }
 
+.login-input .MuiInputBase-root {
+  background-color: #fff;
+}
+
 .login-button {
   margin-top: 10px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: none;
 }
 
-.signup-link {
-  display: block;
-  margin-top: 20px;
-  font-weight: bold; /* Make the text bold */
-  color: #2a00b3; /* Light blue color */
-  text-decoration: none; /* Remove underline */
-  cursor: pointer; /* Pointer cursor on hover */
+.login-button:hover {
+  background-color: #1e0080;
 }
 
-.signup-link:hover {
-  color: rgb(112, 10, 10); /* Slightly darker blue on hover */
-}
 .forgot-password-link {
   display: block;
-  margin-top: 10px;
-  color: #2a00b3;
+  margin-top: 15px;
+  color: #b3001b;
   text-decoration: none;
 }
 
 .forgot-password-link:hover {
-  color: rgb(112, 10, 10);
+  color: #1e0080;
+}
+
+.signup-text {
+  margin-top: 20px;
+}
+
+.signup-link {
+  color: #2a00b3;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.signup-link:hover {
+  color: #9aba31;
 }
