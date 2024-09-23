@@ -1,4 +1,4 @@
-// frontend/src/components/pages/scanImages.js
+// frontend/src/components/pages/ScanImages.js
 
 import React, { useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react'; // Use named export QRCodeCanvas
@@ -6,10 +6,22 @@ import io from 'socket.io-client';
 import Tesseract from 'tesseract.js';
 import CONFIG from '../../.config'; // Adjust the import path if necessary
 
-// Use the server URL from the configuration
+// MUI Components
+import {
+  Container,
+  Typography,
+  Box,
+  TextField,
+  Button,
+  CircularProgress,
+  Paper,
+} from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ClearIcon from '@mui/icons-material/Clear';
+
 const SERVER_URL = CONFIG.SERVER_IP; // Ensure it uses HTTPS
 
-function ScanImage() {
+function ScanImages() {
   const [textData, setTextData] = useState('');
   const [imageProcessing, setImageProcessing] = useState(false);
   const [sessionId] = useState(() => Math.random().toString(36).substring(7));
@@ -31,7 +43,7 @@ function ScanImage() {
       console.log('📥 Received image data from mobile client');
       console.log(`📦 Image data size: ${data.length} characters`);
       setImageProcessing(true);
-      processImage(data, socket);
+      processImage(data);
     });
 
     // Clean up the socket connection on component unmount
@@ -42,19 +54,16 @@ function ScanImage() {
   }, [sessionId]);
 
   // Function to process the image using Tesseract.js
-  const processImage = async (imageData, socket) => {
+  const processImage = async (imageData) => {
     try {
       console.log('🖼️ Starting OCR processing...');
       const { data: { text } } = await Tesseract.recognize(
         imageData,
         'eng',
-        { logger: m => console.log(`Tesseract.js: ${m.status} (${Math.round(m.progress * 100)}%)`) }
+        { logger: (m) => console.log(`Tesseract.js: ${m.status} (${Math.round(m.progress * 100)}%)`) }
       );
       console.log('✅ OCR processing completed.');
-      setTextData(prev => prev + (prev ? '\n' : '') + text.trim());
-
-      // Optionally, you can send the extracted text back to the mobile device
-      // socket.emit('textData', text.trim());
+      setTextData((prev) => prev + (prev ? '\n' : '') + text.trim());
     } catch (error) {
       console.error('❌ Error during OCR processing:', error);
       alert('Error during OCR processing. Please try again.');
@@ -79,95 +88,65 @@ function ScanImage() {
   };
 
   return (
-    <div className="ScanImage" style={styles.container}>
-      <h1 style={styles.header}>Scan QR Code with Mobile Device</h1>
-      <div style={styles.qrCodeContainer}>
-        <QRCodeCanvas
-          value={`${SERVER_URL}/mobile.html?sessionId=${sessionId}`}
-          size={256}
-          bgColor="#ffffff"
-          fgColor="#000000"
-          level="Q"
-          style={styles.qrCode}
-        />
-      </div>
-      <div className="textarea-container" style={styles.textareaContainer}>
-        <textarea
-          value={textData}
-          readOnly
-          rows={10}
-          cols={50}
-          style={styles.textarea}
-          placeholder="Extracted text will appear here..."
-        />
-        {imageProcessing && <p style={styles.processingText}>🔄 Processing image...</p>}
-        <div className="buttons" style={styles.buttonsContainer}>
-          <button onClick={handleCopy} style={styles.button}>📋 Copy</button>
-          <button onClick={handleClear} style={styles.button}>🧹 Clear</button>
-        </div>
-      </div>
-    </div>
+    <Container maxWidth="md" sx={{ mt: 5 }}>
+      <Paper elevation={3} sx={{ padding: 4 }}>
+        <Typography variant="h4" align="center" gutterBottom>
+          📄 Image to Text Converter
+        </Typography>
+        <Box display="flex" justifyContent="center" mb={4}>
+          <QRCodeCanvas
+            value={`${SERVER_URL}/mobile.html?sessionId=${sessionId}`}
+            size={256}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            level="Q"
+            includeMargin={false}
+          />
+        </Box>
+        <Box mb={3}>
+          <TextField
+            label="Extracted Text"
+            multiline
+            rows={10}
+            fullWidth
+            variant="outlined"
+            value={textData}
+            InputProps={{
+              readOnly: true,
+            }}
+          />
+        </Box>
+        {imageProcessing && (
+          <Box display="flex" justifyContent="center" mb={2}>
+            <CircularProgress />
+            <Typography variant="body1" sx={{ ml: 2 }}>
+              Processing image...
+            </Typography>
+          </Box>
+        )}
+        <Box display="flex" justifyContent="center" gap={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<ContentCopyIcon />}
+            onClick={handleCopy}
+            disabled={!textData}
+          >
+            Copy
+          </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<ClearIcon />}
+            onClick={handleClear}
+            disabled={!textData}
+          >
+            Clear
+          </Button>
+        </Box>
+      </Paper>
+    </Container>
   );
 }
 
-// Inline styles for better user interface
-const styles = {
-  container: {
-    fontFamily: 'Arial, sans-serif',
-    padding: '40px',
-    maxWidth: '800px',
-    margin: '0 auto',
-    textAlign: 'center',
-  },
-  header: {
-    fontSize: '32px',
-    marginBottom: '40px',
-    color: '#333',
-  },
-  qrCodeContainer: {
-    marginBottom: '40px',
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  qrCode: {
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-  },
-  textareaContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  textarea: {
-    width: '100%',
-    maxWidth: '600px',
-    height: '200px',
-    padding: '10px',
-    fontSize: '16px',
-    borderRadius: '5px',
-    border: '1px solid #ccc',
-    resize: 'vertical',
-  },
-  processingText: {
-    marginTop: '10px',
-    fontStyle: 'italic',
-    color: '#007bff',
-  },
-  buttonsContainer: {
-    marginTop: '20px',
-    display: 'flex',
-    gap: '20px',
-  },
-  button: {
-    padding: '10px 20px',
-    fontSize: '18px',
-    borderRadius: '5px',
-    border: 'none',
-    cursor: 'pointer',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    transition: 'background-color 0.3s',
-  },
-};
-
-// Export the component
-export default ScanImage;
+export default ScanImages;

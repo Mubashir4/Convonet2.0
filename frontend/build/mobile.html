@@ -6,6 +6,12 @@
     <title>Upload Image</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Font Awesome for Icons -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+
     <!-- Custom Styles -->
     <style>
         body {
@@ -36,16 +42,32 @@
             object-fit: contain;
             margin-bottom: 20px;
             display: none;
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        /* Styled File Input */
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
         }
 
         #imageInput {
+            opacity: 0;
+            position: absolute;
+            left: 0;
+            top: 0;
             width: 100%;
-            padding: 10px;
-            font-size: 18px;
-            margin-bottom: 20px;
+            height: 100%;
+            cursor: pointer;
         }
 
-        #sendBtn {
+        .upload-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 100%;
             padding: 15px;
             font-size: 18px;
@@ -57,9 +79,35 @@
             transition: background-color 0.3s;
         }
 
+        .upload-button:hover {
+            background-color: #0056b3;
+        }
+
+        .upload-button i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        #sendBtn {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
         #sendBtn:disabled {
             background-color: #6c757d;
             cursor: not-allowed;
+        }
+
+        #sendBtn:hover:not(:disabled) {
+            background-color: #218838;
         }
 
         #status {
@@ -68,18 +116,31 @@
             text-align: center;
         }
 
-        /* Button hover effect */
-        #sendBtn:hover:not(:disabled) {
-            background-color: #0056b3;
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .upload-button {
+                font-size: 16px;
+                padding: 12px;
+            }
+
+            #sendBtn {
+                font-size: 16px;
+                padding: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Upload Image</h1>
-        <input type="file" accept="image/*" id="imageInput">
+        <h1>📸 Upload Image</h1>
+        <div class="file-input-wrapper">
+            <button class="upload-button">
+                <i class="fas fa-upload"></i> Choose Image
+            </button>
+            <input type="file" accept="image/*" id="imageInput">
+        </div>
         <img id="imagePreview" src="#" alt="Image Preview">
-        <button id="sendBtn" disabled>Send Image to Desktop</button>
+        <button id="sendBtn" disabled>📤 Send Image to Desktop</button>
         <p id="status"></p>
     </div>
 
