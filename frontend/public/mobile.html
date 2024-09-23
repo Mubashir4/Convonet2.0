@@ -1,5 +1,3 @@
-<!-- mobile.html -->
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -85,11 +83,13 @@
     const socket = io('https://app.convonote.com', { query: { sessionId } });
 
     socket.on('connect', () => {
-      console.log('Connected to server');
+      console.log('Connected to server via WebSocket');
+      document.getElementById('status').textContent = 'Connected to server.';
     });
 
     socket.on('connect_error', (err) => {
-      console.error('Connection Error:', err.message);
+      console.error('WebSocket Connection Error:', err.message);
+      document.getElementById('status').textContent = 'Connection Error: ' + err.message;
     });
 
     const imageInput = document.getElementById('imageInput');
@@ -116,6 +116,7 @@
 
     sendBtn.addEventListener('click', () => {
       if (imageData) {
+        console.log('Sending image data to server...');
         status.textContent = 'Sending image...';
         socket.emit('imageData', imageData);
         sendBtn.disabled = true;
