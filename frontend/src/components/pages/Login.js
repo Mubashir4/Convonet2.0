@@ -48,7 +48,7 @@ const Login = () => {
       <Box className="login-content">
         <Paper elevation={6} className="login-box">
           <Typography variant="h4" className="login-title">
-            Welcome Back
+            Convonote
           </Typography>
           <Typography variant="subtitle1" className="login-subtitle">
             Please sign in to continue

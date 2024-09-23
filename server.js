@@ -1,3 +1,5 @@
+// server.js
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -38,13 +40,11 @@ mongoose.connect(process.env.MONGODB_URI, {
 // API routes
 app.use('/api', routes);
 
-// Serve the upload.html file
-app.get('/upload', (req, res) => {
-  res.sendFile(path.join(__dirname, 'routes', 'upload.html'));
-});
-
 // Serve static files from the React frontend app
 app.use(express.static(path.join(__dirname, 'frontend', 'build')));
+
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Socket.IO logic
 const sessions = {};
@@ -53,18 +53,32 @@ io.on('connection', (socket) => {
   const sessionId = socket.handshake.query.sessionId;
 
   if (sessionId) {
+    console.log(`Client connected with sessionId: ${sessionId}, socket ID: ${socket.id}`);
+
     // Store socket ID for the session
     if (!sessions[sessionId]) sessions[sessionId] = {};
     sessions[sessionId][socket.id] = socket;
 
+    // Relay 'textData' events as before
     socket.on('textData', (data) => {
-      // Emit text data to all sockets in the session
+      console.log(`Received textData from session ${sessionId}: ${data}`);
+      // Emit text data to all sockets in the session except the sender
       Object.values(sessions[sessionId]).forEach(s => {
         if (s !== socket) s.emit('textData', data);
       });
     });
 
+    // Relay 'imageData' events
+    socket.on('imageData', (data) => {
+      console.log(`Received imageData from session ${sessionId}`);
+      // Emit image data to all sockets in the session except the sender
+      Object.values(sessions[sessionId]).forEach(s => {
+        if (s !== socket) s.emit('imageData', data);
+      });
+    });
+
     socket.on('disconnect', () => {
+      console.log(`Client disconnected: ${socket.id}`);
       delete sessions[sessionId][socket.id];
       if (Object.keys(sessions[sessionId]).length === 0) {
         delete sessions[sessionId];
@@ -73,8 +87,7 @@ io.on('connection', (socket) => {
   }
 });
 
-
-
+// Fallback route to serve React app
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
 });

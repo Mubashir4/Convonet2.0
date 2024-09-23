@@ -1,33 +1,57 @@
+// scanImages.js
+
 import React, { useState, useEffect } from 'react';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import io from 'socket.io-client';
-import CONFIG from '../../.config';
+import Tesseract from 'tesseract.js';
+import CONFIG from '../../.config'; // Adjusted import path
 
 // Use the server IP from the configuration
 const SERVER_IP = CONFIG.SERVER_IP;
 
 function ScanImage() {
   const [textData, setTextData] = useState('');
-  const [socket, setSocket] = useState(null);
-
-  // Generate a unique session ID only once
+  const [imageProcessing, setImageProcessing] = useState(false);
   const [sessionId] = useState(() => Math.random().toString(36).substring(7));
 
   useEffect(() => {
-    // Connect to the server with the sessionId
     const newSocket = io(SERVER_IP, { query: { sessionId } });
-    setSocket(newSocket);
 
-    // Listen for text data from the mobile device
-    newSocket.on('textData', (data) => {
-      setTextData((prev) => prev + (prev ? '\n' : '') + data);
+    newSocket.on('connect', () => {
+      console.log('Connected to server');
     });
 
-    // Clean up the socket connection on unmount
+    newSocket.on('connect_error', (err) => {
+      console.error('Connection Error:', err.message);
+    });
+
+    // Listen for image data from the mobile device
+    newSocket.on('imageData', (data) => {
+      console.log('Received image data');
+      setImageProcessing(true);
+      processImage(data);
+    });
+
     return () => {
       newSocket.close();
     };
-  }, [sessionId]); // sessionId is now constant
+
+    // Function to process the image using Tesseract.js
+    function processImage(imageData) {
+      Tesseract.recognize(
+        imageData,
+        'eng',
+        { logger: m => console.log(m) }
+      ).then(({ data: { text } }) => {
+        setTextData((prev) => prev + (prev ? '\n' : '') + text.trim());
+        setImageProcessing(false);
+      }).catch(err => {
+        console.error('Error during OCR:', err);
+        alert('Error during OCR processing. Please try again.');
+        setImageProcessing(false);
+      });
+    }
+  }, [sessionId]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(textData);
@@ -41,9 +65,10 @@ function ScanImage() {
   return (
     <div className="ScanImage">
       <h1>Scan QR Code with Mobile Device</h1>
-      <QRCode value={`${SERVER_IP}/mobile.html?sessionId=${sessionId}`} />
+      <QRCodeSVG value={`${SERVER_IP}/mobile.html?sessionId=${sessionId}`} size={256} />
       <div className="textarea-container">
         <textarea value={textData} readOnly rows={10} cols={50} />
+        {imageProcessing && <p>Processing image...</p>}
         <div className="buttons">
           <button onClick={handleCopy}>Copy</button>
           <button onClick={handleClear}>Clear</button>

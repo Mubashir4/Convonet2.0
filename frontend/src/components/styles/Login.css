@@ -5,6 +5,7 @@
   align-items: center;
   min-height: 100vh;
   background-image: url('../../assets/dashBackground.png');
+  background-color: #555;
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
@@ -22,12 +23,12 @@
 }
 
 .login-content {
+  padding-top: 100px;
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
-  padding: 20px;
 }
 
 .login-box {
