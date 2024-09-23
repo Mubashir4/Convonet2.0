@@ -88,7 +88,6 @@ function ScanImage() {
           bgColor="#ffffff"
           fgColor="#000000"
           level="Q"
-          includeMargin={false}
           style={styles.qrCode}
         />
       </div>
