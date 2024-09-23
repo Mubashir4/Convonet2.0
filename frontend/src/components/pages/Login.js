@@ -50,9 +50,6 @@ const Login = () => {
           <Typography variant="h4" className="login-title">
             Convonote
           </Typography>
-          <Typography variant="subtitle1" className="login-subtitle">
-            Please sign in to continue
-          </Typography>
           <form onSubmit={handleSubmit} className="login-form">
             <TextField
               label="Email"
