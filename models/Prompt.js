@@ -28,15 +28,22 @@ const promptSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  created_at: {
-    type: Date,
-    default: Date.now,
-  },
   userName: { 
     type: String,
     required: true,
-  }
-});
+  },
+  order: {  // New field added for ordering
+    type: Number,
+    default: 0,
+  },
+  temperature: { // New field for temperature
+    type: Number,
+    required: true,
+    min: 0.0,
+    max: 2.0,
+    default: 0.3,
+  },
+}, { timestamps: true });
 
 const Prompt = mongoose.model('Prompt', promptSchema);
 

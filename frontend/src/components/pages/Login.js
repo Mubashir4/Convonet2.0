@@ -48,7 +48,7 @@ const Login = () => {
       <Box className="login-content">
         <Paper elevation={6} className="login-box">
           <Typography variant="h4" className="login-title">
-            Convonote
+            <b>Convonote</b>
           </Typography>
           <form onSubmit={handleSubmit} className="login-form">
             <TextField

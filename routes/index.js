@@ -306,15 +306,6 @@ router.patch('/users/:id', async (req, res) => {
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 
-// Get all prompts
-router.get('/prompts', async (req, res) => {
-  try {
-    const prompts = await Prompt.find();
-    res.json(prompts);
-  } catch (error) {
-    res.status(500).json({ msg: 'Server error' });
-  }
-});
 
 // Get all agents with filtering based on current prompt order
 router.get('/agents', async (req, res) => {
@@ -336,25 +327,68 @@ router.get('/agents', async (req, res) => {
 });
 
 
-// Create or update prompts
+// Helper function to validate connectedAgents
+const validateConnectedAgents = async (connectedAgents) => {
+  if (!Array.isArray(connectedAgents)) return false;
+  for (let agentName of connectedAgents) {
+    const exists = await Prompt.findOne({ agentName });
+    if (!exists) {
+      return false;
+    }
+  }
+  return true;
+};
+
+// -------------------
+// Reorder Prompts Route
+// -------------------
+router.put('/prompts/reorder', async (req, res) => {
+  const { orderedPromptIds } = req.body; // Array of prompt IDs in the desired order
+
+  if (!Array.isArray(orderedPromptIds)) {
+    return res.status(400).json({ msg: 'orderedPromptIds must be an array' });
+  }
+
+  try {
+    for (let index = 0; index < orderedPromptIds.length; index++) {
+      await Prompt.findByIdAndUpdate(orderedPromptIds[index], { order: index });
+    }
+    res.status(200).json({ msg: 'Prompts reordered successfully' });
+  } catch (error) {
+    console.error('Error reordering prompts:', error.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+// -------------------
+// Create a New Prompt
+// -------------------
 router.post('/prompts', async (req, res) => {
-  const { agentName, prompt, modelType, contextDocs, connectedAgents, transcript, userName } = req.body;
+  const { agentName, prompt, modelType, contextDocs, connectedAgents, transcript, userName, temperature } = req.body;
+
+  // Validate connectedAgents
+  if (connectedAgents && !(await validateConnectedAgents(connectedAgents))) {
+    return res.status(400).json({ msg: 'One or more connected agents do not exist' });
+  }
 
   try {
     let existingPrompt = await Prompt.findOne({ agentName });
 
     if (existingPrompt) {
-      existingPrompt.prompt = prompt;
-      existingPrompt.modelType = modelType;
-      existingPrompt.contextDocs = contextDocs;
-      existingPrompt.connectedAgents = connectedAgents;
-      existingPrompt.transcript = transcript;
-      existingPrompt.userName = userName; 
-
-      await existingPrompt.save();
-      res.status(200).json(existingPrompt);
+      return res.status(400).json({ msg: 'Agent name already exists' });
     } else {
-      const newPrompt = new Prompt({ agentName, prompt, modelType, contextDocs, connectedAgents, transcript, userName });
+      const totalPrompts = await Prompt.countDocuments();
+      const newPrompt = new Prompt({
+        agentName,
+        prompt,
+        modelType,
+        contextDocs,
+        connectedAgents,
+        transcript,
+        userName,
+        temperature: temperature !== undefined ? temperature : 0.3, // Default to 0.3 if not provided
+        order: totalPrompts // Assign order based on current count
+      });
       await newPrompt.save();
       res.status(201).json(newPrompt);
     }
@@ -364,10 +398,57 @@ router.post('/prompts', async (req, res) => {
   }
 });
 
+// -------------------
+// Update an Existing Prompt
+// -------------------
+router.put('/prompts/:id', async (req, res) => {
+  const { id } = req.params;
+  const { prompt, modelType, contextDocs, connectedAgents, transcript, userName, order, temperature } = req.body;
 
+  // Validate connectedAgents
+  if (connectedAgents && !(await validateConnectedAgents(connectedAgents))) {
+    return res.status(400).json({ msg: 'One or more connected agents do not exist' });
+  }
 
+  try {
+    const existingPrompt = await Prompt.findById(id);
+    if (!existingPrompt) {
+      return res.status(404).json({ msg: 'Prompt not found' });
+    }
 
-// Delete a prompt
+    // Update fields except agentName
+    existingPrompt.prompt = prompt || existingPrompt.prompt;
+    existingPrompt.modelType = modelType || existingPrompt.modelType;
+    existingPrompt.contextDocs = contextDocs || existingPrompt.contextDocs;
+    existingPrompt.connectedAgents = connectedAgents || existingPrompt.connectedAgents;
+    existingPrompt.transcript = transcript !== undefined ? transcript : existingPrompt.transcript;
+    existingPrompt.userName = userName || existingPrompt.userName;
+    existingPrompt.order = order !== undefined ? order : existingPrompt.order;
+    existingPrompt.temperature = temperature !== undefined ? temperature : existingPrompt.temperature;
+
+    await existingPrompt.save();
+    res.status(200).json(existingPrompt);
+  } catch (error) {
+    console.error('Error updating prompt:', error.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+// -------------------
+// Get All Prompts (Ordered)
+// -------------------
+router.get('/prompts', async (req, res) => {
+  try {
+    const prompts = await Prompt.find().sort({ order: 1 });
+    res.json(prompts);
+  } catch (error) {
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+// -------------------
+// Delete a Prompt
+// -------------------
 router.delete('/prompts/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -381,6 +462,8 @@ router.delete('/prompts/:id', async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 });
+
+module.exports = router;
 
 // Route to save transcription history
 router.post('/saveTranscription', async (req, res) => {

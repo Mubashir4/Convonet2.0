@@ -64,7 +64,7 @@ const callOpenAIAPI = async (messages, max_tokens, temperature, seed) => {
   }
 };
 
-const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000, modelType) => {
+const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000, modelType, temperature = 0.2) => {
   let attempt = 0;
   let generatedOutput = '';
 
@@ -88,7 +88,7 @@ const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000, 
         result = await callOpenAIAPI(
           [{ role: 'user', content: promptConfig[0].text }],
           null,
-          parseFloat(config.temperature) || 0.2,
+          parseFloat(temperature) || 0.2,
           ''
         );
         generatedOutput += result;
@@ -126,7 +126,7 @@ const diagnosticUnified = async (req, res) => {
       let initialPromptText = `Answer me:\n'${transcription}'`;
 
       let initialPromptConfig = [{ text: initialPromptText }];
-      const initialDiagnosisText = await generateResponse(initialPromptConfig, 3, 1000, defaultModelType);
+      const initialDiagnosisText = await generateResponse(initialPromptConfig, 3, 1000, defaultModelType, 0.2);
 
       // Save the initial transcription history
       let newEntry = new TranscriptionHistory({
@@ -175,20 +175,26 @@ const diagnosticUnified = async (req, res) => {
         // First prompt specifically answers the transcription
         promptConfig = [
           {
-            text: `Having context:\n'${promptContext}' respond to:\n${transcriptText}\nApply the following prompt to answer:\n${promptObj.prompt}`,
+            text: `Having context:\n'${promptContext}' Answer me:\n${transcriptText}`,
           },
         ];
       } else {
         // Subsequent prompts can follow the regular format
         promptConfig = [
           {
-            text: `Having context:\n'${promptContext}'on ${transcriptText}\n${agentResponses}\nApply prompt:\n${promptObj.prompt}`,
+            text: `Having context:\n'${promptContext}'${transcriptText ? `\n${transcriptText}` : ''}\n${agentResponses}\nApply prompt:\n${promptObj.prompt}`,
           },
         ];
       }
 
-      // Use the model specified in the prompt
-      const diagnosisText = await generateResponse(promptConfig, 3, 1000, promptObj.modelType);
+      // Use the model and temperature specified in the prompt
+      const diagnosisText = await generateResponse(
+        promptConfig,
+        3,
+        1000,
+        promptObj.modelType,
+        promptObj.temperature || 0.3 // Use temperature from prompt or default to 0.3
+      );
       diagnosisResponses.push(diagnosisText);
 
       // Save the response to the map in case it is needed for later prompts
