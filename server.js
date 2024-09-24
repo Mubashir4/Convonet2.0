@@ -11,8 +11,6 @@ const cron = require('node-cron');
 const TranscriptionHistory = require('./models/transcriptionHistory'); // Your Mongoose model
 const http = require('http'); // HTTP server
 const socketIo = require('socket.io'); // Socket.IO
-const Tesseract = require('tesseract.js'); // Tesseract.js for OCR
-const sharp = require('sharp'); // For image preprocessing
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -73,53 +71,35 @@ io.on('connection', (socket) => {
         sessions[sessionId][socket.id] = socket;
 
         // Handle 'imageData' event
-        socket.on('imageData', async (data) => {
+        socket.on('imageData', (data) => {
             console.log(`📷 Received imageData from Session ${sessionId}, Socket ID = ${socket.id}`);
             console.log(`📦 Image data size: ${Buffer.byteLength(data, 'utf8')} bytes`);
 
-            try {
-                // Extract base64 data from data URL
-                const matches = data.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
-                if (!matches || matches.length !== 3) {
-                    throw new Error('Invalid image data format.');
+            // Optional: Save image data to a file for debugging (Uncomment to enable)
+            /*
+            const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const timestamp = Date.now();
+            const fs = require('fs');
+            fs.writeFile(`uploads/image_${timestamp}.png`, buffer, (err) => {
+                if (err) {
+                    console.error('❌ Error saving image file:', err);
+                } else {
+                    console.log('✅ Image file saved successfully.');
                 }
+            });
+            */
 
-                const base64Data = matches[2];
-                const buffer = Buffer.from(base64Data, 'base64');
-
-                // Preprocess image using Sharp
-                const processedBuffer = await sharp(buffer)
-                    .resize(1024, 1024, {
-                        fit: 'inside',
-                        withoutEnlargement: true,
-                    })
-                    .grayscale()
-                    .normalize()
-                    .toBuffer();
-
-                // Perform OCR using Tesseract.js
-                console.log('🖼️ Starting OCR processing with Tesseract.js...');
-                const { data: { text } } = await Tesseract.recognize(processedBuffer, 'eng', {
-                    logger: m => console.log(`Tesseract.js: ${m.status} (${Math.round(m.progress * 100)}%)`)
-                });
-                console.log('✅ OCR processing completed.');
-
-                // Clean the extracted text
-                const cleanedText = cleanText(text);
-                console.log(`📝 Cleaned Text: ${cleanedText}`);
-
-                
-
-                // Send the cleaned text back to the client
-                socket.emit('textData', cleanedText);
-                console.log(`📤 Sent cleaned text to Socket ID = ${socket.id}`);
-            } catch (error) {
-                console.error('❌ Error during OCR processing:', error.message);
-                socket.emit('textData', 'Error during OCR processing.');
-            }
+            // Relay imageData to other sockets in the same session
+            Object.keys(sessions[sessionId]).forEach((id) => {
+                if (id !== socket.id) { // Don't send back to sender
+                    sessions[sessionId][id].emit('imageData', data);
+                    console.log(`📤 Relayed imageData to Socket ID = ${id}`);
+                }
+            });
         });
 
-        // Handle 'textData' event (if needed)
+        // Handle 'textData' event
         socket.on('textData', (data) => {
             console.log(`📝 Received textData from Session ${sessionId}, Socket ID = ${socket.id}: ${data}`);
 
@@ -175,14 +155,3 @@ cron.schedule('0 0 * * *', async () => {
         console.error('❌ Error deleting old transcription history records:', error);
     }
 });
-
-/**
- * Function to clean text by removing all non-English alphabets and symbols.
- * Keeps only English letters, numbers, spaces, and basic punctuation.
- * @param {string} text - The text to be cleaned.
- * @returns {string} - The cleaned text.
- */
-function cleanText(text) {
-    // Remove all characters that are not English letters, numbers, spaces, or basic punctuation
-    return text.replace(/[^A-Za-z0-9 .,!?'"()-]/g, '');
-}
