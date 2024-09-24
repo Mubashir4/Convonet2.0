@@ -11,9 +11,13 @@ const cron = require('node-cron');
 const TranscriptionHistory = require('./models/transcriptionHistory'); // Your Mongoose model
 const http = require('http'); // HTTP server
 const socketIo = require('socket.io'); // Socket.IO
+const { ImageAnnotatorClient } = require('@google-cloud/vision'); // Google Cloud Vision
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Initialize Google Cloud Vision client
+const visionClient = new ImageAnnotatorClient();
 
 // Middlewares
 app.use(cors()); // Enable CORS for all routes
@@ -71,35 +75,43 @@ io.on('connection', (socket) => {
         sessions[sessionId][socket.id] = socket;
 
         // Handle 'imageData' event
-        socket.on('imageData', (data) => {
+        socket.on('imageData', async (data) => {
             console.log(`📷 Received imageData from Session ${sessionId}, Socket ID = ${socket.id}`);
             console.log(`📦 Image data size: ${Buffer.byteLength(data, 'utf8')} bytes`);
 
-            // Optional: Save image data to a file for debugging (Uncomment to enable)
-            /*
-            const base64Data = data.replace(/^data:image\/\w+;base64,/, '');
-            const buffer = Buffer.from(base64Data, 'base64');
-            const timestamp = Date.now();
-            const fs = require('fs');
-            fs.writeFile(`uploads/image_${timestamp}.png`, buffer, (err) => {
-                if (err) {
-                    console.error('❌ Error saving image file:', err);
-                } else {
-                    console.log('✅ Image file saved successfully.');
-                }
-            });
-            */
+            try {
+                // Perform OCR using Google Cloud Vision API
+                const [result] = await visionClient.textDetection(data);
+                const detections = result.textAnnotations;
+                let extractedText = '';
 
-            // Relay imageData to other sockets in the same session
-            Object.keys(sessions[sessionId]).forEach((id) => {
-                if (id !== socket.id) { // Don't send back to sender
-                    sessions[sessionId][id].emit('imageData', data);
-                    console.log(`📤 Relayed imageData to Socket ID = ${id}`);
+                if (detections && detections.length > 0) {
+                    extractedText = detections[0].description;
+                    console.log(`📝 Extracted Text: ${extractedText}`);
+                } else {
+                    extractedText = 'No text detected.';
+                    console.log('📝 No text detected in the image.');
                 }
-            });
+
+                // Optionally, save to transcription history
+                const transcriptionRecord = new TranscriptionHistory({
+                    sessionId,
+                    text: extractedText,
+                });
+
+                await transcriptionRecord.save();
+                console.log('💾 Saved transcription record to MongoDB.');
+
+                // Send the extracted text back to the client
+                socket.emit('textData', extractedText);
+                console.log(`📤 Sent extracted text to Socket ID = ${socket.id}`);
+            } catch (error) {
+                console.error('❌ Error during OCR processing:', error);
+                socket.emit('textData', 'Error during OCR processing.');
+            }
         });
 
-        // Handle 'textData' event
+        // Handle 'textData' event (if needed)
         socket.on('textData', (data) => {
             console.log(`📝 Received textData from Session ${sessionId}, Socket ID = ${socket.id}: ${data}`);
 
