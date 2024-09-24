@@ -22,6 +22,7 @@ import { decryptData, encryptData } from '../utils/encryption';
 import '../styles/Diagnosis.css';
 import CONFIG from '../../.config';
 import { useTranscription } from './TranscriptionContext';
+import ReactMarkdown from 'react-markdown';
 
 const MakeNotes = () => {
   const {
@@ -186,9 +187,7 @@ const MakeNotes = () => {
               <Grid item xs>
                 <Box className="ai-diagnosis-textfield">
                   {diagnosis.length > 0 ? (
-                    <Typography variant="body1" component="div">
-                      {decryptData(diagnosis[currentIndex])}
-                    </Typography>
+                    <ReactMarkdown>{decryptData(diagnosis[currentIndex])}</ReactMarkdown>
                   ) : (
                     <Typography variant="body1" color="textSecondary">
                       No notes generated yet.
