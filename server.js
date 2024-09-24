@@ -17,7 +17,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Initialize Google Cloud Vision client
-const visionClient = new ImageAnnotatorClient();
+const visionClient = new ImageAnnotatorClient({
+    credentials: {
+        // If using an API key, you can pass it here
+        // However, it's better to use a service account for server-side applications
+        // Replace 'YOUR_API_KEY' with your actual API key
+        // Alternatively, set the GOOGLE_APPLICATION_CREDENTIALS environment variable to the path of your service account JSON
+        // Example:
+        // keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+    },
+});
 
 // Middlewares
 app.use(cors()); // Enable CORS for all routes
@@ -80,8 +89,17 @@ io.on('connection', (socket) => {
             console.log(`📦 Image data size: ${Buffer.byteLength(data, 'utf8')} bytes`);
 
             try {
+                // Extract base64 data from data URL
+                const matches = data.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+                if (!matches || matches.length !== 3) {
+                    throw new Error('Invalid image data format.');
+                }
+
+                const base64Data = matches[2];
+                const buffer = Buffer.from(base64Data, 'base64');
+
                 // Perform OCR using Google Cloud Vision API
-                const [result] = await visionClient.textDetection(data);
+                const [result] = await visionClient.textDetection({ image: { content: buffer } });
                 const detections = result.textAnnotations;
                 let extractedText = '';
 
