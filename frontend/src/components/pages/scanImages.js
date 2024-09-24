@@ -1,9 +1,9 @@
 // frontend/src/components/pages/ScanImages.js
 
 import React, { useState, useEffect } from 'react';
-import { QRCodeCanvas } from 'qrcode.react'; // Use named export QRCodeCanvas
+import { QRCodeCanvas } from 'qrcode.react';
 import io from 'socket.io-client';
-import CONFIG from '../../.config'; // Adjust the import path if necessary
+import CONFIG from '../../.config'; // Ensure the path is correct
 
 // MUI Components
 import {
@@ -71,12 +71,27 @@ function ScanImages() {
     };
 
     return (
-        <Container maxWidth="md" sx={{ mt: 5 }}>
-            <Paper elevation={3} sx={{ padding: 4 }}>
+        <Box
+            sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#f0f2f5',
+                padding: 2,
+            }}
+        >
+            <Paper elevation={6} sx={{ padding: 4, width: '100%', maxWidth: 800 }}>
                 <Typography variant="h4" align="center" gutterBottom>
                     📄 Image to Text Converter
                 </Typography>
-                <Box display="flex" justifyContent="center" mb={4}>
+                <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    mb={4}
+                    sx={{ overflow: 'auto' }}
+                >
                     <QRCodeCanvas
                         value={`${SERVER_URL}/mobile.html?sessionId=${sessionId}`}
                         size={256}
@@ -84,24 +99,29 @@ function ScanImages() {
                         fgColor="#000000"
                         level="Q"
                         includeMargin={false}
+                        style={{ borderRadius: 8 }}
                     />
                 </Box>
                 <Box mb={3}>
                     <TextField
                         label="Extracted Text"
                         multiline
-                        rows={10}
+                        rows={15}
                         fullWidth
                         variant="outlined"
                         value={textData}
                         InputProps={{
                             readOnly: true,
                         }}
+                        sx={{
+                            backgroundColor: '#ffffff',
+                            borderRadius: 1,
+                        }}
                     />
                 </Box>
                 {imageProcessing && (
-                    <Box display="flex" justifyContent="center" mb={2}>
-                        <CircularProgress />
+                    <Box display="flex" justifyContent="center" alignItems="center" mb={2}>
+                        <CircularProgress color="primary" />
                         <Typography variant="body1" sx={{ ml: 2 }}>
                             Processing image...
                         </Typography>
@@ -114,6 +134,10 @@ function ScanImages() {
                         startIcon={<ContentCopyIcon />}
                         onClick={handleCopy}
                         disabled={!textData}
+                        sx={{
+                            minWidth: 120,
+                            paddingY: 1.5,
+                        }}
                     >
                         Copy
                     </Button>
@@ -123,12 +147,16 @@ function ScanImages() {
                         startIcon={<ClearIcon />}
                         onClick={handleClear}
                         disabled={!textData}
+                        sx={{
+                            minWidth: 120,
+                            paddingY: 1.5,
+                        }}
                     >
                         Clear
                     </Button>
                 </Box>
             </Paper>
-        </Container>
+        </Box>
     );
 }
 

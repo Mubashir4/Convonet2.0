@@ -11,22 +11,11 @@ const cron = require('node-cron');
 const TranscriptionHistory = require('./models/transcriptionHistory'); // Your Mongoose model
 const http = require('http'); // HTTP server
 const socketIo = require('socket.io'); // Socket.IO
-const { ImageAnnotatorClient } = require('@google-cloud/vision'); // Google Cloud Vision
+const Tesseract = require('tesseract.js'); // Tesseract.js for OCR
+const sharp = require('sharp'); // For image preprocessing
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Initialize Google Cloud Vision client
-const visionClient = new ImageAnnotatorClient({
-    credentials: {
-        // If using an API key, you can pass it here
-        // However, it's better to use a service account for server-side applications
-        // Replace 'YOUR_API_KEY' with your actual API key
-        // Alternatively, set the GOOGLE_APPLICATION_CREDENTIALS environment variable to the path of your service account JSON
-        // Example:
-        // keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-    },
-});
 
 // Middlewares
 app.use(cors()); // Enable CORS for all routes
@@ -98,33 +87,41 @@ io.on('connection', (socket) => {
                 const base64Data = matches[2];
                 const buffer = Buffer.from(base64Data, 'base64');
 
-                // Perform OCR using Google Cloud Vision API
-                const [result] = await visionClient.textDetection({ image: { content: buffer } });
-                const detections = result.textAnnotations;
-                let extractedText = '';
+                // Preprocess image using Sharp
+                const processedBuffer = await sharp(buffer)
+                    .resize(1024, 1024, {
+                        fit: 'inside',
+                        withoutEnlargement: true,
+                    })
+                    .grayscale()
+                    .normalize()
+                    .toBuffer();
 
-                if (detections && detections.length > 0) {
-                    extractedText = detections[0].description;
-                    console.log(`📝 Extracted Text: ${extractedText}`);
-                } else {
-                    extractedText = 'No text detected.';
-                    console.log('📝 No text detected in the image.');
-                }
+                // Perform OCR using Tesseract.js
+                console.log('🖼️ Starting OCR processing with Tesseract.js...');
+                const { data: { text } } = await Tesseract.recognize(processedBuffer, 'eng', {
+                    logger: m => console.log(`Tesseract.js: ${m.status} (${Math.round(m.progress * 100)}%)`)
+                });
+                console.log('✅ OCR processing completed.');
+
+                // Clean the extracted text
+                const cleanedText = cleanText(text);
+                console.log(`📝 Cleaned Text: ${cleanedText}`);
 
                 // Optionally, save to transcription history
                 const transcriptionRecord = new TranscriptionHistory({
                     sessionId,
-                    text: extractedText,
+                    text: cleanedText,
                 });
 
                 await transcriptionRecord.save();
                 console.log('💾 Saved transcription record to MongoDB.');
 
-                // Send the extracted text back to the client
-                socket.emit('textData', extractedText);
-                console.log(`📤 Sent extracted text to Socket ID = ${socket.id}`);
+                // Send the cleaned text back to the client
+                socket.emit('textData', cleanedText);
+                console.log(`📤 Sent cleaned text to Socket ID = ${socket.id}`);
             } catch (error) {
-                console.error('❌ Error during OCR processing:', error);
+                console.error('❌ Error during OCR processing:', error.message);
                 socket.emit('textData', 'Error during OCR processing.');
             }
         });
@@ -185,3 +182,14 @@ cron.schedule('0 0 * * *', async () => {
         console.error('❌ Error deleting old transcription history records:', error);
     }
 });
+
+/**
+ * Function to clean text by removing all non-English alphabets and symbols.
+ * Keeps only English letters, numbers, spaces, and basic punctuation.
+ * @param {string} text - The text to be cleaned.
+ * @returns {string} - The cleaned text.
+ */
+function cleanText(text) {
+    // Remove all characters that are not English letters, numbers, spaces, or basic punctuation
+    return text.replace(/[^A-Za-z0-9 .,!?'"()-]/g, '');
+}
