@@ -8,7 +8,6 @@ const path = require('path');
 const routes = require('./routes'); // Your API routes
 const bodyParser = require('body-parser');
 const cron = require('node-cron');
-const TranscriptionHistory = require('./models/transcriptionHistory'); // Your Mongoose model
 const http = require('http'); // HTTP server
 const socketIo = require('socket.io'); // Socket.IO
 const Tesseract = require('tesseract.js'); // Tesseract.js for OCR
@@ -23,17 +22,17 @@ app.use(express.json()); // Parse JSON bodies
 app.use(bodyParser.json()); // Parse JSON bodies (redundant with express.json())
 app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(() => {
-    console.log('✅ Connected to MongoDB');
-})
-.catch((err) => {
-    console.error('❌ Error connecting to MongoDB:', err);
-});
+// **Removed: Connecting to MongoDB**
+// mongoose.connect(process.env.MONGODB_URI, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+// })
+// .then(() => {
+//     console.log('✅ Connected to MongoDB');
+// })
+// .catch((err) => {
+//     console.error('❌ Error connecting to MongoDB:', err);
+// });
 
 // API routes
 app.use('/api', routes); // Mount your API routes at /api
@@ -108,14 +107,7 @@ io.on('connection', (socket) => {
                 const cleanedText = cleanText(text);
                 console.log(`📝 Cleaned Text: ${cleanedText}`);
 
-                // Optionally, save to transcription history
-                const transcriptionRecord = new TranscriptionHistory({
-                    sessionId,
-                    text: cleanedText,
-                });
-
-                await transcriptionRecord.save();
-                console.log('💾 Saved transcription record to MongoDB.');
+                // **Removed: Saving to Database**
 
                 // Send the cleaned text back to the client
                 socket.emit('textData', cleanedText);
@@ -167,21 +159,7 @@ server.listen(PORT, () => {
     console.log(`🚀 Server is running on https://app.convonote.com:${PORT}`);
 });
 
-// Schedule a cron job to run daily at midnight
-cron.schedule('0 0 * * *', async () => {
-    try {
-        const now = new Date();
-        const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
-
-        // Find and delete records older than 30 days
-        const result = await TranscriptionHistory.deleteMany({ createdAt: { $lt: thirtyDaysAgo } });
-
-        // Log the result
-        console.log(`🗑️ ${result.deletedCount} transcription history records older than 30 days were deleted.`);
-    } catch (error) {
-        console.error('❌ Error deleting old transcription history records:', error);
-    }
-});
+// **Removed: Cron Job for Deleting Old Transcription Records**
 
 /**
  * Function to clean text by removing all non-English alphabets and symbols.
