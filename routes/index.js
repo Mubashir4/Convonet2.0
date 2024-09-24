@@ -212,8 +212,12 @@ router.post('/reset-password', async (req, res) => {
     const token = crypto.randomBytes(20).toString('hex');
 
     // Set token and expiration on user model
+    const expirationTime = Date.now() + 3600000 * 24; // 24 hours for testing
     user.resetPasswordToken = token;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    user.resetPasswordExpires = expirationTime;
+
+    console.log('Token generated:', token);
+    console.log('Expiration time:', new Date(expirationTime).toISOString());
 
     await user.save();
 
@@ -247,11 +251,21 @@ router.post('/new-password', async (req, res) => {
   const { token, password } = req.body;
   try {
     const user = await User.findOne({ 
-      resetPasswordToken: token, 
-      resetPasswordExpires: { $gt: Date.now() } 
+      resetPasswordToken: token
     });
+
     if (!user) {
-      return res.status(400).json({ msg: 'Password reset token is invalid or has expired.' });
+      console.log('User not found with token:', token);
+      return res.status(400).json({ msg: 'Password reset token is invalid.' });
+    }
+
+    console.log('User found:', user.email);
+    console.log('Token expiration:', user.resetPasswordExpires);
+    console.log('Current time:', new Date());
+
+    if (user.resetPasswordExpires < Date.now()) {
+      console.log('Token has expired');
+      return res.status(400).json({ msg: 'Password reset token has expired.' });
     }
 
     user.password = password;
