@@ -15,7 +15,8 @@ const App = () => {
     <TranscriptionProvider>
       <Router>
         <Routes>
-          <Route exact path="/" element={<><Login /></>} />
+          <Route exact path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/reset-password/:token" element={<NewPassword />} />
           <Route path="/signup" element={<><TopBar /><Signup /></>} />
