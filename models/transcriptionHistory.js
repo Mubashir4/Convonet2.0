@@ -4,6 +4,9 @@ const TranscriptionHistorySchema = new mongoose.Schema({
   email: { type: String, required: true },
   transcription: { type: String, required: true },
   diagnosisText: { type: String, required: true },
+  sessionId: { type: String },
+  agentCount: { type: Number, default: 1 },
+  executionTime: { type: Number },
   createdAt: { type: Date, default: Date.now }
 });
 
