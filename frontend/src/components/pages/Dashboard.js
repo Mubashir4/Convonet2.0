@@ -6,6 +6,7 @@ import Sidebar from './Sidebar';
 import ContextDocument from './ContextDocument';
 import Transcribe from './Transcribe';
 import Diagnosis from './Diagnosis';
+import EnhancedDiagnosis from './EnhancedDiagnosis';
 import AdminPanel from './AdminPanel';
 import ScanImage from './scanImages'; // Import the scanImage component
 import TranscriptionHistory from './TranscriptionHistoryPage';
@@ -95,7 +96,7 @@ const Dashboard = () => {
           />
         );
       case 'Make Notes':
-        return <Diagnosis />;
+        return <EnhancedDiagnosis />;
       case 'Scan Image':
           return <ScanImage />;
       case 'History':

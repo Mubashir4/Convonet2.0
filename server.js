@@ -21,6 +21,12 @@ app.use(express.json()); // Parse JSON bodies
 app.use(bodyParser.json()); // Parse JSON bodies (redundant with express.json())
 app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
+// Add request timing middleware
+app.use((req, res, next) => {
+  req.startTime = Date.now();
+  next();
+});
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
@@ -32,6 +38,9 @@ mongoose.connect(process.env.MONGODB_URI, {
 .catch((err) => {
     console.error('❌ Error connecting to MongoDB:', err);
 });
+
+// Make io instance available to routes
+app.set('io', io);
 
 // API routes
 app.use('/api', routes); // Mount your API routes at /api

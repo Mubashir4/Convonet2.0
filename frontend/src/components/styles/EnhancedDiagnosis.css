@@ -1,0 +1,285 @@
+/* Enhanced Diagnosis Styles */
+
+.enhanced-diagnosis-container {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.workflow-progress-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.agent-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.agent-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.agent-card.running {
+  border-color: #2196f3;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+}
+
+.agent-card.completed {
+  border-color: #4caf50;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+}
+
+.agent-card.error {
+  border-color: #f44336;
+  box-shadow: 0 0 20px rgba(244, 67, 54, 0.3);
+}
+
+.agent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.agent-status-chip {
+  margin-left: 16px;
+}
+
+.agent-details {
+  padding: 0 16px 16px;
+}
+
+.reasoning-section {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(33, 150, 243, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+}
+
+.actions-section {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(156, 39, 176, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #9c27b0;
+}
+
+.observations-section {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
+}
+
+.result-section {
+  padding: 16px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #4caf50;
+  margin-top: 16px;
+}
+
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #2196f3 0%, #21cbf3 100%);
+  margin-bottom: 16px;
+}
+
+.loading-backdrop {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+}
+
+.loading-content {
+  text-align: center;
+  color: white;
+}
+
+.final-results {
+  margin-top: 32px;
+}
+
+.result-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.copy-button {
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.3s ease;
+}
+
+.copy-button:hover {
+  color: #2196f3;
+}
+
+.phase-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.phase-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2196f3;
+  transition: all 0.3s ease;
+}
+
+.phase-dot.completed {
+  background: #4caf50;
+}
+
+.phase-dot.current {
+  background: #ff9800;
+  box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+}
+
+.thought-bubble {
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  border-radius: 18px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  position: relative;
+  animation: fadeInUp 0.5s ease;
+}
+
+.thought-bubble::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid rgba(33, 150, 243, 0.3);
+}
+
+.action-item {
+  background: rgba(156, 39, 176, 0.1);
+  border: 1px solid rgba(156, 39, 176, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  animation: slideInRight 0.5s ease;
+}
+
+.observation-item {
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  animation: slideInLeft 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.pulsing-dot {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(33, 150, 243, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .enhanced-diagnosis-container {
+    padding: 12px;
+  }
+  
+  .agent-card {
+    margin-bottom: 12px;
+  }
+  
+  .agent-header {
+    padding: 12px;
+  }
+  
+  .agent-details {
+    padding: 0 12px 12px;
+  }
+}
+
+/* Dark theme enhancements */
+.MuiCard-root {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.MuiTypography-root {
+  color: white !important;
+}
+
+.MuiLinearProgress-root {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.MuiLinearProgress-bar {
+  background: linear-gradient(90deg, #2196f3 0%, #21cbf3 100%) !important;
+}

@@ -7,6 +7,7 @@ const Prompt = require('../models/Prompt');
 const TranscriptionHistory = require('../models/transcriptionHistory');
 const { ObjectId } = require('mongoose').Types;
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const AgentOrchestrator = require('./agentOrchestrator');
 require('dotenv').config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -108,123 +109,114 @@ const generateResponse = async (promptConfig, retries = 3, initialDelay = 1000, 
 
 
 const diagnosticUnified = async (req, res) => {
-  const { email, transcription, userContext } = req.body; // Removed useContextDoc since we no longer need this flag
+  const { email, transcription, userContext, sessionId } = req.body;
 
   if (!email || !transcription) {
     return res.status(400).json({ error: 'No email or transcription provided' });
   }
 
-  const config = readConfig();
-  const defaultModelType = config.diagnosis_model === '0' ? 'gpt-4o-mini' : 'gemini-1.5-flash';
-
   try {
-    // Fetch any prompts associated with the user
-    const prompts = await Prompt.find({ userName: email.trim() });
-
-    // Default mode: no prompts, no contextDocs, just the transcription
-    if (prompts.length === 0) {
-      let initialPromptText = `Answer me:\n'${transcription}'`;
-
-      let initialPromptConfig = [{ text: initialPromptText }];
-      const initialDiagnosisText = await generateResponse(initialPromptConfig, 3, 1000, defaultModelType, 0.2);
-
-      // Save the initial transcription history
-      let newEntry = new TranscriptionHistory({
-        email,
-        transcription,
-        diagnosisText: initialDiagnosisText,
-        createdAt: new Date(),
+    // Create orchestrator instance
+    const orchestrator = new AgentOrchestrator();
+    
+    // Set up real-time event streaming if socket.io is available
+    const io = req.app.get('io');
+    const socketSessionId = sessionId || `session_${Date.now()}`;
+    
+    if (io) {
+      // Set up event listeners for real-time updates
+      orchestrator.on('workflowStarted', (data) => {
+        io.to(socketSessionId).emit('workflowStarted', data);
       });
-      await newEntry.save();
-
-      return res.json({ responses: [initialDiagnosisText] });
-    } 
-
-    // If prompts exist, process them one by one, using the models and contextDocs specified in each prompt
-    const diagnosisResponses = [];
-
-    // Temporary storage for responses that may be needed as context for later prompts
-    let promptResponseMap = {};
-
-    for (let i = 0; i < prompts.length; i++) {
-      const promptObj = prompts[i];
       
-      // Fetch contextDocs specified in the prompt
-      let promptContextDocsText = '';
-      if (promptObj.contextDocs && promptObj.contextDocs.length > 0) {
-        const contextDocs = await ContextDoc.find({ name: { $in: promptObj.contextDocs }, active: true });
-        promptContextDocsText = contextDocs.map(doc => doc.text).join('\n');
-      }
-
-      // Construct the full context for the prompt, combining contextDocs and userContext
-      let promptContext = `${promptContextDocsText}${userContext ? `\n${userContext}` : ''}`;
-
-      // If the prompt includes previous agent responses, add them
-      let agentResponses = '';
-      if (promptObj.connectedAgents && promptObj.connectedAgents.length > 0) {
-        const agentNames = promptObj.connectedAgents.join(', ');
-        agentResponses = `Agent responses: ${agentNames}`;
-      }
-
-      // Check if the transcript needs to be included
-      let transcriptText = promptObj.transcript ? `\nThe Transcript: ${transcription}` : '';
-
-      // Build the prompt query for the first prompt differently
-      let promptConfig;
-      if (i === 0) {
-        // First prompt specifically answers the transcription
-        promptConfig = [
-          {
-            text: `Having context:\n'${promptContext}' Answer me:\n${transcriptText}`,
-          },
-        ];
-      } else {
-        // Subsequent prompts can follow the regular format
-        promptConfig = [
-          {
-            text: `Having context:\n'${promptContext}'${transcriptText ? `\n${transcriptText}` : ''}\n${agentResponses}\nApply prompt:\n${promptObj.prompt}`,
-          },
-        ];
-      }
-
-      // Use the model and temperature specified in the prompt
-      const diagnosisText = await generateResponse(
-        promptConfig,
-        3,
-        1000,
-        promptObj.modelType,
-        promptObj.temperature || 0.3 // Use temperature from prompt or default to 0.3
-      );
-      diagnosisResponses.push(diagnosisText);
-
-      // Save the response to the map in case it is needed for later prompts
-      promptResponseMap[promptObj.agentName] = diagnosisText;
-
-      // Save each prompt's transcription history
-      let newEntry = new TranscriptionHistory({
-        email,
-        transcription: promptConfig[0].text,
-        diagnosisText,
-        createdAt: new Date(),
+      orchestrator.on('planCreated', (data) => {
+        io.to(socketSessionId).emit('planCreated', data);
       });
-      await newEntry.save();
+      
+      orchestrator.on('phaseStarted', (data) => {
+        io.to(socketSessionId).emit('phaseStarted', data);
+      });
+      
+      orchestrator.on('agentStarted', (data) => {
+        io.to(socketSessionId).emit('agentStarted', data);
+      });
+      
+      orchestrator.on('agentThought', (data) => {
+        io.to(socketSessionId).emit('agentThought', data);
+      });
+      
+      orchestrator.on('agentAction', (data) => {
+        io.to(socketSessionId).emit('agentAction', data);
+      });
+      
+      orchestrator.on('agentObservation', (data) => {
+        io.to(socketSessionId).emit('agentObservation', data);
+      });
+      
+      orchestrator.on('agentCompleted', (data) => {
+        io.to(socketSessionId).emit('agentCompleted', data);
+      });
+      
+      orchestrator.on('phaseCompleted', (data) => {
+        io.to(socketSessionId).emit('phaseCompleted', data);
+      });
+      
+      orchestrator.on('workflowCompleted', (data) => {
+        io.to(socketSessionId).emit('workflowCompleted', data);
+      });
+      
+      orchestrator.on('agentError', (data) => {
+        io.to(socketSessionId).emit('agentError', data);
+      });
+      
+      orchestrator.on('workflowError', (data) => {
+        io.to(socketSessionId).emit('workflowError', data);
+      });
+    }
 
-      // Check and clean up older transcription history
-      const historyCount = await TranscriptionHistory.countDocuments({ email });
-      if (historyCount > 30) {
-        const oldestEntry = await TranscriptionHistory.findOne({ email }).sort({ createdAt: 1 });
-        if (oldestEntry) {
-          await TranscriptionHistory.findByIdAndDelete(oldestEntry._id);
-        }
+    // Execute the agent workflow with modern orchestration
+    const responses = await orchestrator.executeAgentWorkflow(
+      email, 
+      transcription, 
+      userContext, 
+      io, 
+      socketSessionId
+    );
+
+    // Save transcription history with enhanced metadata
+    const newEntry = new TranscriptionHistory({
+      email,
+      transcription,
+      diagnosisText: responses.join('\n\n--- Agent Separator ---\n\n'),
+      sessionId: socketSessionId,
+      agentCount: responses.length,
+      createdAt: new Date(),
+    });
+    await newEntry.save();
+
+    // Clean up old entries
+    const historyCount = await TranscriptionHistory.countDocuments({ email });
+    if (historyCount > 30) {
+      const oldestEntry = await TranscriptionHistory.findOne({ email }).sort({ createdAt: 1 });
+      if (oldestEntry) {
+        await TranscriptionHistory.findByIdAndDelete(oldestEntry._id);
       }
     }
 
-    // Return all diagnosis responses
-    res.json({ responses: diagnosisResponses });
+    // Return responses with metadata
+    res.json({ 
+      responses,
+      sessionId: socketSessionId,
+      agentCount: responses.length,
+      executionTime: Date.now() - (req.startTime || Date.now())
+    });
 
   } catch (error) {
     console.error(`Error processing request: ${error.message}`);
-    res.status(500).json({ error: 'An error occurred during processing' });
+    res.status(500).json({ 
+      error: 'An error occurred during processing',
+      details: error.message 
+    });
   }
 };
 
